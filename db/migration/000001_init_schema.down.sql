@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS schedules;
+DROP TABLE IF EXISTS next_occurence;
+DROP TABLE IF EXISTS history;
+DROP TABLE IF EXISTS punch_card;
