@@ -22,6 +22,7 @@ func (m *MyHook1) GetName() string {
 func (m *MyHook1) Perform(msg Message, statusChan chan<- Message) {
 	fmt.Println("Performing Hook 1")
 	fmt.Println(msg)
+	msg.Details = "Done working..."
 	msg.Type = SUCCESS
 	statusChan <- msg
 }

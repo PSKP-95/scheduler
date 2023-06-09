@@ -41,10 +41,12 @@ Table next_occurence {
 }
 
 Table history {
+  occurence_id integer [not null]
   schedule uuid [not null]
   status status [not null]
   details text [not null]
-  scehduled_at timestamptz [not null]
+  manual bool [not null, default: false]
+  scheduled_at timestamptz [not null]
   started_at timestamptz [not null]
   completed_at timestamptz [not null]
   Indexes{
@@ -60,4 +62,5 @@ Table punch_card {
 
 Ref:"schedules"."id" < "next_occurence"."schedule"
 Ref:"schedules"."id" < "history"."schedule"
+Ref:"next_occurence"."id" < "history"."occurence_id"
 Ref:"punch_card"."id" < "next_occurence"."worker" [delete: set null]

@@ -33,6 +33,34 @@ func (q *Queries) CreateWorker(ctx context.Context, arg CreateWorkerParams) (Pun
 	return i, err
 }
 
+const deadWorkers = `-- name: DeadWorkers :many
+SELECT id, last_punch, created_at FROM punch_card
+WHERE last_punch < (CURRENT_TIMESTAMP - INTERVAL $1 SECOND)
+`
+
+func (q *Queries) DeadWorkers(ctx context.Context, dollar_1 int64) ([]PunchCard, error) {
+	rows, err := q.db.QueryContext(ctx, deadWorkers, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PunchCard{}
+	for rows.Next() {
+		var i PunchCard
+		if err := rows.Scan(&i.ID, &i.LastPunch, &i.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const deleteWorker = `-- name: DeleteWorker :exec
 DELETE FROM punch_card
 WHERE id = $1

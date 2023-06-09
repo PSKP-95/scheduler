@@ -13,4 +13,6 @@ const (
 type Message struct {
 	Type      MsgType
 	Occurence db.NextOccurence
+	Schedule  db.Schedule
+	Details   string
 }

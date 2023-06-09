@@ -19,3 +19,7 @@ OFFSET $2;
 -- name: DeleteWorker :exec
 DELETE FROM punch_card
 WHERE id = $1;
+
+-- name: DeadWorkers :many
+SELECT * FROM punch_card
+WHERE last_punch < (CURRENT_TIMESTAMP - INTERVAL $1 SECOND); 

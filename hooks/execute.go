@@ -3,6 +3,7 @@ package hooks
 import (
 	"context"
 	"fmt"
+	"time"
 
 	db "github.com/PSKP-95/schedular/db/sqlc"
 	"github.com/PSKP-95/schedular/util"
@@ -43,9 +44,45 @@ func (ex *Executor) Execute() {
 			if err != nil {
 				fmt.Println("Processing failed")
 			}
+			msg.Schedule = schedule
+			historyParam := getHistoryParam(schedule, msg.Occurence)
+			_, err = ex.store.CreateHistory(context.Background(), historyParam)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
 			go ex.hooks[schedule.Hook].Perform(msg, ex.exChan)
 		case SUCCESS:
-			fmt.Println("Processing Success")
+			ex.store.UpdateStatusAndDetails(context.Background(),
+				db.UpdateStatusAndDetailsParams{
+					OccurenceID: msg.Occurence.ID,
+					Status:      db.StatusSuccess,
+					Details:     msg.Details,
+				},
+			)
+			ex.store.DeleteOccurence(context.Background(), msg.Occurence.ID)
+		case FAILED:
+			ex.store.UpdateStatusAndDetails(context.Background(),
+				db.UpdateStatusAndDetailsParams{
+					OccurenceID: msg.Occurence.ID,
+					Status:      db.StatusFailure,
+					Details:     msg.Details,
+				},
+			)
+			ex.store.DeleteOccurence(context.Background(), msg.Occurence.ID)
 		}
 	}
+}
+
+func getHistoryParam(schedule db.Schedule, occurence db.NextOccurence) db.CreateHistoryParams {
+	historyParam := db.CreateHistoryParams{
+		OccurenceID: occurence.ID,
+		Schedule:    schedule.ID,
+		Status:      db.StatusRunning,
+		Manual:      occurence.Manual,
+		Details:     "",
+		ScheduledAt: occurence.Occurence.Time,
+		StartedAt:   time.Now(),
+	}
+
+	return historyParam
 }

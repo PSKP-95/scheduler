@@ -58,10 +58,12 @@ func (ns NullStatus) Value() (driver.Value, error) {
 }
 
 type History struct {
+	OccurenceID int32     `json:"occurence_id"`
 	Schedule    uuid.UUID `json:"schedule"`
 	Status      Status    `json:"status"`
 	Details     string    `json:"details"`
-	ScehduledAt time.Time `json:"scehduled_at"`
+	Manual      bool      `json:"manual"`
+	ScheduledAt time.Time `json:"scheduled_at"`
 	StartedAt   time.Time `json:"started_at"`
 	CompletedAt time.Time `json:"completed_at"`
 }

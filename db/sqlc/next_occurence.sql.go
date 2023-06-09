@@ -53,3 +53,33 @@ func (q *Queries) CreateOccurence(ctx context.Context, arg CreateOccurenceParams
 	)
 	return i, err
 }
+
+const deleteOccurence = `-- name: DeleteOccurence :exec
+DELETE FROM next_occurence
+WHERE id = $1
+`
+
+func (q *Queries) DeleteOccurence(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteOccurence, id)
+	return err
+}
+
+const getOccurence = `-- name: GetOccurence :one
+SELECT id, schedule, worker, manual, status, occurence, last_updated FROM next_occurence
+WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetOccurence(ctx context.Context, id int32) (NextOccurence, error) {
+	row := q.db.QueryRowContext(ctx, getOccurence, id)
+	var i NextOccurence
+	err := row.Scan(
+		&i.ID,
+		&i.Schedule,
+		&i.Worker,
+		&i.Manual,
+		&i.Status,
+		&i.Occurence,
+		&i.LastUpdated,
+	)
+	return i, err
+}
