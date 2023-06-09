@@ -1,6 +1,8 @@
 package worker
 
 import (
+	"context"
+
 	db "github.com/PSKP-95/schedular/db/sqlc"
 	"github.com/PSKP-95/schedular/hooks"
 	"github.com/PSKP-95/schedular/util"
@@ -26,5 +28,5 @@ func NewWorker(config util.Config, store db.Store, executor *hooks.Executor) (*W
 }
 
 func (worker *Worker) Register() {
-
+	worker.store.CreateWorker(context.Background(), worker.id)
 }

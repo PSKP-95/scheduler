@@ -4,6 +4,7 @@ import (
 	db "github.com/PSKP-95/schedular/db/sqlc"
 	"github.com/PSKP-95/schedular/hooks"
 	"github.com/PSKP-95/schedular/util"
+	"github.com/PSKP-95/schedular/worker"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -16,14 +17,16 @@ type Server struct {
 	app      *fiber.App
 	validate *validator.Validate
 	executor *hooks.Executor
+	worker   *worker.Worker
 }
 
-func NewServer(config util.Config, store db.Store, executor *hooks.Executor) (*Server, error) {
+func NewServer(config util.Config, store db.Store, executor *hooks.Executor, worker *worker.Worker) (*Server, error) {
 	server := &Server{
 		config:   config,
 		store:    store,
 		validate: validator.New(),
 		executor: executor,
+		worker:   worker,
 	}
 
 	server.setupRouter()

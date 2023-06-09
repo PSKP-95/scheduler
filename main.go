@@ -8,6 +8,7 @@ import (
 	db "github.com/PSKP-95/schedular/db/sqlc"
 	"github.com/PSKP-95/schedular/hooks"
 	"github.com/PSKP-95/schedular/util"
+	"github.com/PSKP-95/schedular/worker"
 	_ "github.com/lib/pq"
 )
 
@@ -27,16 +28,23 @@ func main() {
 
 	store := db.New(conn)
 	executor, err := hooks.NewExecutor(config, store, executorChan)
+	worker, err := worker.NewWorker(config, store, executor)
 
 	if err != nil {
 		log.Fatal("something wrong while creating executor: ", err)
 	}
 
-	server, err := api.NewServer(config, store, executor)
+	server, err := api.NewServer(config, store, executor, worker)
 
 	if err != nil {
 		log.Fatal("something wrong while creating new server: ", err)
 	}
+
+	// register worker
+	worker.Register()
+
+	// start worker
+	go worker.Work()
 
 	// start executor
 	go executor.Execute()

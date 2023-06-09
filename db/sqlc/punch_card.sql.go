@@ -7,7 +7,6 @@ package db
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -17,17 +16,12 @@ INSERT INTO punch_card (
   id,
   last_punch
 ) VALUES (
-  $1, $2
+  $1, now()
 ) RETURNING id, last_punch, created_at
 `
 
-type CreateWorkerParams struct {
-	ID        uuid.UUID `json:"id"`
-	LastPunch time.Time `json:"last_punch"`
-}
-
-func (q *Queries) CreateWorker(ctx context.Context, arg CreateWorkerParams) (PunchCard, error) {
-	row := q.db.QueryRowContext(ctx, createWorker, arg.ID, arg.LastPunch)
+func (q *Queries) CreateWorker(ctx context.Context, id uuid.UUID) (PunchCard, error) {
+	row := q.db.QueryRowContext(ctx, createWorker, id)
 	var i PunchCard
 	err := row.Scan(&i.ID, &i.LastPunch, &i.CreatedAt)
 	return i, err
@@ -116,4 +110,15 @@ func (q *Queries) ListWorkers(ctx context.Context, arg ListWorkersParams) ([]Pun
 		return nil, err
 	}
 	return items, nil
+}
+
+const proveLiveliness = `-- name: ProveLiveliness :exec
+UPDATE punch_card 
+SET last_punch = now()
+WHERE id = $1
+`
+
+func (q *Queries) ProveLiveliness(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, proveLiveliness, id)
+	return err
 }

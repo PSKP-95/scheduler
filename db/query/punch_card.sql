@@ -3,7 +3,7 @@ INSERT INTO punch_card (
   id,
   last_punch
 ) VALUES (
-  $1, $2
+  $1, now()
 ) RETURNING *;
 
 -- name: GetWorker :one
@@ -22,4 +22,9 @@ WHERE id = $1;
 
 -- name: DeadWorkers :many
 SELECT * FROM punch_card
-WHERE last_punch < (CURRENT_TIMESTAMP - INTERVAL $1 SECOND); 
+WHERE last_punch < (CURRENT_TIMESTAMP - INTERVAL $1 SECOND);
+
+-- name: ProveLiveliness :exec
+UPDATE punch_card 
+SET last_punch = now()
+WHERE id = $1;

@@ -14,7 +14,7 @@ type Querier interface {
 	CreateHistory(ctx context.Context, arg CreateHistoryParams) (History, error)
 	CreateOccurence(ctx context.Context, arg CreateOccurenceParams) (NextOccurence, error)
 	CreateSchedule(ctx context.Context, arg CreateScheduleParams) (Schedule, error)
-	CreateWorker(ctx context.Context, arg CreateWorkerParams) (PunchCard, error)
+	CreateWorker(ctx context.Context, id uuid.UUID) (PunchCard, error)
 	DeadWorkers(ctx context.Context, dollar_1 int64) ([]PunchCard, error)
 	DeleteOccurence(ctx context.Context, id int32) error
 	DeleteSchedule(ctx context.Context, id uuid.UUID) error
@@ -25,6 +25,7 @@ type Querier interface {
 	ListHistory(ctx context.Context, arg ListHistoryParams) ([]History, error)
 	ListSchedules(ctx context.Context, arg ListSchedulesParams) ([]Schedule, error)
 	ListWorkers(ctx context.Context, arg ListWorkersParams) ([]PunchCard, error)
+	ProveLiveliness(ctx context.Context, id uuid.UUID) error
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Schedule, error)
 	UpdateStatusAndDetails(ctx context.Context, arg UpdateStatusAndDetailsParams) (History, error)
 }
