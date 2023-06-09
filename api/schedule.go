@@ -5,6 +5,7 @@ import (
 	"time"
 
 	db "github.com/PSKP-95/schedular/db/sqlc"
+	"github.com/PSKP-95/schedular/hooks"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -36,13 +37,12 @@ func (server *Server) createSchedule(ctx *fiber.Ctx) error {
 	}
 
 	scheduleParams := db.CreateScheduleParams{
-		ID:           uuid.New(),
-		Cron:         scheduleReq.Cron,
-		Hook:         scheduleReq.Hook,
-		Owner:        scheduleReq.Owner,
-		Active:       scheduleReq.Active,
-		LastModified: time.Now(),
-		Till:         scheduleReq.Till,
+		ID:     uuid.New(),
+		Cron:   scheduleReq.Cron,
+		Hook:   scheduleReq.Hook,
+		Owner:  scheduleReq.Owner,
+		Active: scheduleReq.Active,
+		Till:   scheduleReq.Till,
 	}
 
 	schedule, err := server.store.CreateSchedule(ctx.Context(), scheduleParams)
@@ -64,6 +64,29 @@ func (server *Server) createSchedule(ctx *fiber.Ctx) error {
 }
 
 func (server *Server) getSchedule(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	if id == "" {
+		ctx.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "provide parameter id"})
+		return nil
+	}
+
+	schedule, err := server.store.GetSchedule(ctx.Context(), uuid.MustParse(id))
+
+	if err != nil {
+		// if pqErr, ok := err.(*pq.Error); ok {
+		// 	switch pqErr.Code.Name() {
+		// 	case "foreign_key_violation", "unique_violation":
+		// 		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
+		// 		return err
+		// 	}
+		// }
+		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
+		return err
+	}
+
+	ctx.Status(http.StatusOK).JSON(schedule)
+
 	return nil
 }
 
@@ -89,5 +112,100 @@ func (server *Server) deleteSchedule(ctx *fiber.Ctx) error {
 		return err
 	}
 
+	return nil
+}
+
+type updatescheduleRequest struct {
+	Cron   string    `json:"cron" validate:"cron"`
+	Hook   string    `json:"hook"`
+	Active bool      `json:"active"`
+	Till   time.Time `json:"till" validate:"datetime"`
+}
+
+func (server *Server) editSchedule(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	if id == "" {
+		ctx.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "provide parameter id"})
+		return nil
+	}
+
+	scheduleReq := updatescheduleRequest{}
+
+	err := ctx.BodyParser(&scheduleReq)
+	if err != nil {
+		ctx.Status(http.StatusUnprocessableEntity).JSON(
+			&fiber.Map{"message": "request failed. " + err.Error()})
+		return err
+	}
+
+	// err = server.validate.Struct(scheduleReq)
+
+	// if err != nil {
+	// 	ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
+	// 	return err
+	// }
+
+	scheduleParams := db.UpdateAccountParams{
+		ID:     uuid.MustParse(id),
+		Cron:   scheduleReq.Cron,
+		Hook:   scheduleReq.Hook,
+		Active: scheduleReq.Active,
+		Till:   scheduleReq.Till,
+	}
+
+	schedule, err := server.store.UpdateAccount(ctx.Context(), scheduleParams)
+
+	if err != nil {
+		// if pqErr, ok := err.(*pq.Error); ok {
+		// 	switch pqErr.Code.Name() {
+		// 	case "foreign_key_violation", "unique_violation":
+		// 		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
+		// 		return err
+		// 	}
+		// }
+		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
+		return err
+	}
+
+	ctx.Status(http.StatusOK).JSON(schedule)
+
+	return nil
+}
+
+func (server *Server) triggerSchedule(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	if id == "" {
+		ctx.Status(http.StatusBadRequest).JSON(
+			&fiber.Map{"message": "provide parameter id"})
+		return nil
+	}
+
+	schedule, err := server.store.GetSchedule(ctx.Context(), uuid.MustParse(id))
+
+	if err != nil {
+		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
+		return err
+	}
+
+	occurenceParams := db.CreateOccurenceParams{
+		Schedule: schedule.ID,
+		Manual:   true,
+		Status:   db.StatusPending,
+	}
+
+	occurence, err := server.store.CreateOccurence(ctx.Context(), occurenceParams)
+
+	if err != nil {
+		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
+		return nil
+	}
+
+	message := hooks.Message{
+		Type:      hooks.TRIGGER,
+		Occurence: occurence,
+	}
+
+	server.executor.Submit(message)
 	return nil
 }

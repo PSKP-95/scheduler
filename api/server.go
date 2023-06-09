@@ -2,6 +2,7 @@ package api
 
 import (
 	db "github.com/PSKP-95/schedular/db/sqlc"
+	"github.com/PSKP-95/schedular/hooks"
 	"github.com/PSKP-95/schedular/util"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -14,14 +15,15 @@ type Server struct {
 	store    db.Store
 	app      *fiber.App
 	validate *validator.Validate
+	executor *hooks.Executor
 }
 
-func NewServer(config util.Config, store db.Store) (*Server, error) {
-
+func NewServer(config util.Config, store db.Store, executor *hooks.Executor) (*Server, error) {
 	server := &Server{
 		config:   config,
 		store:    store,
 		validate: validator.New(),
+		executor: executor,
 	}
 
 	server.setupRouter()
@@ -40,8 +42,11 @@ func (server *Server) setupRouter() {
 
 	// add routes to router
 	api.Post("/schedule", server.createSchedule)
-	api.Get("/schedules", server.getSchedule)
+	api.Get("/schedule/:id", server.getSchedule)
+	api.Get("/hooks", server.getHooks)
 	api.Delete("/schedule/:id", server.deleteSchedule)
+	api.Put("/schedule/:id", server.editSchedule)
+	api.Get("/schedule/:id/trigger", server.triggerSchedule)
 
 	server.app = app
 }

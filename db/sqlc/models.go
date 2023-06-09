@@ -67,10 +67,12 @@ type History struct {
 }
 
 type NextOccurence struct {
-	Schedule    uuid.NullUUID `json:"schedule"`
+	ID          int32         `json:"id"`
+	Schedule    uuid.UUID     `json:"schedule"`
 	Worker      uuid.NullUUID `json:"worker"`
-	Status      NullStatus    `json:"status"`
-	Occurence   time.Time     `json:"occurence"`
+	Manual      bool          `json:"manual"`
+	Status      Status        `json:"status"`
+	Occurence   sql.NullTime  `json:"occurence"`
 	LastUpdated time.Time     `json:"last_updated"`
 }
 
@@ -85,6 +87,7 @@ type Schedule struct {
 	Cron   string    `json:"cron"`
 	Hook   string    `json:"hook"`
 	Owner  string    `json:"owner"`
+	Data   string    `json:"data"`
 	Active bool      `json:"active"`
 	// till what timestamp this schedule will run
 	Till         time.Time `json:"till"`

@@ -7,12 +7,12 @@ Table schedules {
   id uuid [pk]
   cron varchar [not null]
   hook varchar [not null]
-  owner varchar
+  owner varchar [not null]
+  data varchar [not null, default: '']
   active bool [not null, default: true]
-  times integer [default: -1, note: 'how many times schedule will run before going into inactive state']
-  till timestamptz [default: `0001-01-01 00:00:00Z`, note: 'till what timestamp this schedule will run']
-  created_at timestamptz [default: `now()`]
-  last_modified timestamptz
+  till timestamptz [not null, default: `0001-01-01 00:00:00Z`, note: 'till what timestamp this schedule will run']
+  created_at timestamptz [not null, default: `now()`]
+  last_modified timestamptz [not null]
   Indexes {
     owner
   }
@@ -26,10 +26,12 @@ enum status {
 }
 
 Table next_occurence {
-  schedule uuid 
-  worker uuid
-  status status [default: 'pending']
-  occurence timestamptz [not null]
+  id integer [pk, increment]
+  schedule uuid [not null]
+  worker uuid [default: null]
+  manual bool [not null, default: false]
+  status status [not null, default: 'pending']
+  occurence timestamptz [default: null]
   last_updated timestamptz [not null]
   Indexes{
     worker

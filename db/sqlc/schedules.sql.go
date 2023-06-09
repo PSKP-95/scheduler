@@ -22,18 +22,17 @@ INSERT INTO schedules (
   till,
   last_modified
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7
-) RETURNING id, cron, hook, owner, active, till, created_at, last_modified
+  $1, $2, $3, $4, $5, $6, now()
+) RETURNING id, cron, hook, owner, data, active, till, created_at, last_modified
 `
 
 type CreateScheduleParams struct {
-	ID           uuid.UUID `json:"id"`
-	Cron         string    `json:"cron"`
-	Hook         string    `json:"hook"`
-	Owner        string    `json:"owner"`
-	Active       bool      `json:"active"`
-	Till         time.Time `json:"till"`
-	LastModified time.Time `json:"last_modified"`
+	ID     uuid.UUID `json:"id"`
+	Cron   string    `json:"cron"`
+	Hook   string    `json:"hook"`
+	Owner  string    `json:"owner"`
+	Active bool      `json:"active"`
+	Till   time.Time `json:"till"`
 }
 
 func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) (Schedule, error) {
@@ -44,7 +43,6 @@ func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) 
 		arg.Owner,
 		arg.Active,
 		arg.Till,
-		arg.LastModified,
 	)
 	var i Schedule
 	err := row.Scan(
@@ -52,6 +50,7 @@ func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) 
 		&i.Cron,
 		&i.Hook,
 		&i.Owner,
+		&i.Data,
 		&i.Active,
 		&i.Till,
 		&i.CreatedAt,
@@ -71,7 +70,7 @@ func (q *Queries) DeleteSchedule(ctx context.Context, id uuid.UUID) error {
 }
 
 const getSchedule = `-- name: GetSchedule :one
-SELECT id, cron, hook, owner, active, till, created_at, last_modified FROM schedules
+SELECT id, cron, hook, owner, data, active, till, created_at, last_modified FROM schedules
 WHERE id = $1 LIMIT 1
 `
 
@@ -83,6 +82,7 @@ func (q *Queries) GetSchedule(ctx context.Context, id uuid.UUID) (Schedule, erro
 		&i.Cron,
 		&i.Hook,
 		&i.Owner,
+		&i.Data,
 		&i.Active,
 		&i.Till,
 		&i.CreatedAt,
@@ -92,7 +92,7 @@ func (q *Queries) GetSchedule(ctx context.Context, id uuid.UUID) (Schedule, erro
 }
 
 const listSchedules = `-- name: ListSchedules :many
-SELECT id, cron, hook, owner, active, till, created_at, last_modified FROM schedules
+SELECT id, cron, hook, owner, data, active, till, created_at, last_modified FROM schedules
 WHERE owner = $1
 ORDER BY id
 LIMIT $2
@@ -119,6 +119,7 @@ func (q *Queries) ListSchedules(ctx context.Context, arg ListSchedulesParams) ([
 			&i.Cron,
 			&i.Hook,
 			&i.Owner,
+			&i.Data,
 			&i.Active,
 			&i.Till,
 			&i.CreatedAt,
@@ -135,4 +136,41 @@ func (q *Queries) ListSchedules(ctx context.Context, arg ListSchedulesParams) ([
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateAccount = `-- name: UpdateAccount :one
+UPDATE schedules 
+SET cron = $2, hook = $3, active = $4, till = $5, last_modified = now()
+WHERE id = $1 RETURNING id, cron, hook, owner, data, active, till, created_at, last_modified
+`
+
+type UpdateAccountParams struct {
+	ID     uuid.UUID `json:"id"`
+	Cron   string    `json:"cron"`
+	Hook   string    `json:"hook"`
+	Active bool      `json:"active"`
+	Till   time.Time `json:"till"`
+}
+
+func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Schedule, error) {
+	row := q.db.QueryRowContext(ctx, updateAccount,
+		arg.ID,
+		arg.Cron,
+		arg.Hook,
+		arg.Active,
+		arg.Till,
+	)
+	var i Schedule
+	err := row.Scan(
+		&i.ID,
+		&i.Cron,
+		&i.Hook,
+		&i.Owner,
+		&i.Data,
+		&i.Active,
+		&i.Till,
+		&i.CreatedAt,
+		&i.LastModified,
+	)
+	return i, err
 }

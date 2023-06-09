@@ -8,7 +8,7 @@ INSERT INTO schedules (
   till,
   last_modified
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7
+  $1, $2, $3, $4, $5, $6, now()
 ) RETURNING *;
 
 
@@ -26,3 +26,8 @@ OFFSET $3;
 -- name: DeleteSchedule :exec
 DELETE FROM schedules
 WHERE id = $1;
+
+-- name: UpdateAccount :one
+UPDATE schedules 
+SET cron = $2, hook = $3, active = $4, till = $5, last_modified = now()
+WHERE id = $1 RETURNING *;

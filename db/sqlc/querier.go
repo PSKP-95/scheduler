@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	CreateHistory(ctx context.Context, arg CreateHistoryParams) (History, error)
+	CreateOccurence(ctx context.Context, arg CreateOccurenceParams) (NextOccurence, error)
 	CreateSchedule(ctx context.Context, arg CreateScheduleParams) (Schedule, error)
 	CreateWorker(ctx context.Context, arg CreateWorkerParams) (PunchCard, error)
 	DeleteSchedule(ctx context.Context, id uuid.UUID) error
@@ -21,6 +22,7 @@ type Querier interface {
 	ListHistory(ctx context.Context, arg ListHistoryParams) ([]History, error)
 	ListSchedules(ctx context.Context, arg ListSchedulesParams) ([]Schedule, error)
 	ListWorkers(ctx context.Context, arg ListWorkersParams) ([]PunchCard, error)
+	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Schedule, error)
 }
 
 var _ Querier = (*Queries)(nil)
