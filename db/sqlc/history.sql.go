@@ -66,7 +66,7 @@ func (q *Queries) CreateHistory(ctx context.Context, arg CreateHistoryParams) (H
 const listHistory = `-- name: ListHistory :many
 SELECT occurence_id, schedule, status, details, manual, scheduled_at, started_at, completed_at FROM history
 WHERE schedule = $1
-ORDER BY scehduled_at
+ORDER BY scheduled_at DESC
 LIMIT $2
 OFFSET $3
 `

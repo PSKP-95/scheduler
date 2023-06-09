@@ -15,7 +15,7 @@ INSERT INTO history (
 -- name: ListHistory :many
 SELECT * FROM history
 WHERE schedule = $1
-ORDER BY scehduled_at
+ORDER BY scheduled_at DESC
 LIMIT $2
 OFFSET $3;
 

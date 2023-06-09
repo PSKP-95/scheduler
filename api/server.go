@@ -47,6 +47,7 @@ func (server *Server) setupRouter() {
 	api.Delete("/schedule/:id", server.deleteSchedule)
 	api.Put("/schedule/:id", server.editSchedule)
 	api.Get("/schedule/:id/trigger", server.triggerSchedule)
+	api.Get("/schedule/:id/history", server.getScheduleHistory)
 
 	server.app = app
 }
