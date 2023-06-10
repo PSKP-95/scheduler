@@ -41,7 +41,7 @@ Table next_occurence {
 }
 
 Table history {
-  occurence_id integer [not null]
+  occurence_id integer [pk, not null]
   schedule uuid [not null]
   status status [not null]
   details text [not null]
@@ -62,5 +62,5 @@ Table punch_card {
 
 Ref:"schedules"."id" < "next_occurence"."schedule"
 Ref:"schedules"."id" < "history"."schedule"
-Ref:"next_occurence"."id" < "history"."occurence_id"
+//Ref:"next_occurence"."id" < "history"."occurence_id" [delete: set default]
 Ref:"punch_card"."id" < "next_occurence"."worker" [delete: set null]

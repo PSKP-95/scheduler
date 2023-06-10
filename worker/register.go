@@ -27,6 +27,12 @@ func NewWorker(config util.Config, store db.Store, executor *hooks.Executor) (*W
 	return worker, nil
 }
 
-func (worker *Worker) Register() {
-	worker.store.CreateWorker(context.Background(), worker.id)
+func (worker *Worker) Register() error {
+	_, err := worker.store.CreateWorker(context.Background(), worker.id)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

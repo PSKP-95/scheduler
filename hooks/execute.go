@@ -68,7 +68,10 @@ func (ex *Executor) Execute() {
 					Details:     msg.Details,
 				},
 			)
-			ex.store.DeleteOccurence(context.Background(), msg.Occurence.ID)
+			err := ex.store.DeleteOccurence(context.Background(), msg.Occurence.ID)
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 }

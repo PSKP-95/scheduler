@@ -28,10 +28,15 @@ func main() {
 
 	store := db.New(conn)
 	executor, err := hooks.NewExecutor(config, store, executorChan)
-	worker, err := worker.NewWorker(config, store, executor)
 
 	if err != nil {
 		log.Fatal("something wrong while creating executor: ", err)
+	}
+
+	worker, err := worker.NewWorker(config, store, executor)
+
+	if err != nil {
+		log.Fatal("something wrong while creating worker: ", err)
 	}
 
 	server, err := api.NewServer(config, store, executor, worker)
@@ -41,7 +46,11 @@ func main() {
 	}
 
 	// register worker
-	worker.Register()
+	err = worker.Register()
+
+	if err != nil {
+		log.Fatal("Error while registering worker: ", err)
+	}
 
 	// start worker
 	go worker.Work()

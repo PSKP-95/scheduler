@@ -20,9 +20,9 @@ OFFSET $2;
 DELETE FROM punch_card
 WHERE id = $1;
 
--- name: DeadWorkers :many
-SELECT * FROM punch_card
-WHERE last_punch < (CURRENT_TIMESTAMP - INTERVAL $1 SECOND);
+-- name: RemoveDeadWorkers :exec
+DELETE FROM punch_card
+WHERE last_punch < (CURRENT_TIMESTAMP - INTERVAL '30' SECOND);
 
 -- name: ProveLiveliness :exec
 UPDATE punch_card 

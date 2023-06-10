@@ -28,7 +28,7 @@ CREATE TABLE "next_occurence" (
 );
 
 CREATE TABLE "history" (
-  "occurence_id" integer NOT NULL,
+  "occurence_id" integer PRIMARY KEY NOT NULL,
   "schedule" uuid NOT NULL,
   "status" status NOT NULL,
   "details" text NOT NULL,
@@ -59,7 +59,5 @@ COMMENT ON COLUMN "schedules"."till" IS 'till what timestamp this schedule will 
 ALTER TABLE "next_occurence" ADD FOREIGN KEY ("schedule") REFERENCES "schedules" ("id");
 
 ALTER TABLE "history" ADD FOREIGN KEY ("schedule") REFERENCES "schedules" ("id");
-
-ALTER TABLE "history" ADD FOREIGN KEY ("occurence_id") REFERENCES "next_occurence" ("id");
 
 ALTER TABLE "next_occurence" ADD FOREIGN KEY ("worker") REFERENCES "punch_card" ("id") ON DELETE SET NULL;
