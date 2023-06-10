@@ -18,15 +18,17 @@ type Server struct {
 	validate *validator.Validate
 	executor *hooks.Executor
 	worker   *worker.Worker
+	Logger   *util.Log
 }
 
-func NewServer(config util.Config, store db.Store, executor *hooks.Executor, worker *worker.Worker) (*Server, error) {
+func NewServer(config util.Config, store db.Store, executor *hooks.Executor, worker *worker.Worker, logger *util.Log) (*Server, error) {
 	server := &Server{
 		config:   config,
 		store:    store,
 		validate: validator.New(),
 		executor: executor,
 		worker:   worker,
+		Logger:   logger,
 	}
 
 	server.setupRouter()

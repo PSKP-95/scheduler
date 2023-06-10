@@ -14,17 +14,23 @@ type Worker struct {
 	config   util.Config
 	store    db.Store
 	executor *hooks.Executor
+	Logger   *util.Log
 }
 
-func NewWorker(config util.Config, store db.Store, executor *hooks.Executor) (*Worker, error) {
+func NewWorker(config util.Config, store db.Store, executor *hooks.Executor, logger *util.Log) (*Worker, error) {
 	worker := &Worker{
 		id:       uuid.New(),
 		config:   config,
 		store:    store,
 		executor: executor,
+		Logger:   logger,
 	}
 
 	return worker, nil
+}
+
+func (worker *Worker) GetWorkerId() uuid.UUID {
+	return worker.id
 }
 
 func (worker *Worker) Register() error {

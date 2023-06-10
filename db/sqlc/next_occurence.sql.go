@@ -83,3 +83,51 @@ func (q *Queries) GetOccurence(ctx context.Context, id int32) (NextOccurence, er
 	)
 	return i, err
 }
+
+const myExpiredWork = `-- name: MyExpiredWork :many
+SELECT id, schedule, worker, manual, status, occurence, last_updated FROM next_occurence
+WHERE occurence < CURRENT_TIMESTAMP and worker = $1
+ORDER BY occurence
+`
+
+func (q *Queries) MyExpiredWork(ctx context.Context, worker uuid.NullUUID) ([]NextOccurence, error) {
+	rows, err := q.db.QueryContext(ctx, myExpiredWork, worker)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []NextOccurence{}
+	for rows.Next() {
+		var i NextOccurence
+		if err := rows.Scan(
+			&i.ID,
+			&i.Schedule,
+			&i.Worker,
+			&i.Manual,
+			&i.Status,
+			&i.Occurence,
+			&i.LastUpdated,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const unassignedWorkInFuture = `-- name: UnassignedWorkInFuture :exec
+UPDATE next_occurence 
+SET worker = $1
+WHERE occurence < (CURRENT_TIMESTAMP + INTERVAL '300' SECOND) and worker IS NULL
+`
+
+func (q *Queries) UnassignedWorkInFuture(ctx context.Context, worker uuid.NullUUID) error {
+	_, err := q.db.ExecContext(ctx, unassignedWorkInFuture, worker)
+	return err
+}

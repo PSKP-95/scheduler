@@ -24,8 +24,10 @@ type Querier interface {
 	ListHistory(ctx context.Context, arg ListHistoryParams) ([]History, error)
 	ListSchedules(ctx context.Context, arg ListSchedulesParams) ([]Schedule, error)
 	ListWorkers(ctx context.Context, arg ListWorkersParams) ([]PunchCard, error)
+	MyExpiredWork(ctx context.Context, worker uuid.NullUUID) ([]NextOccurence, error)
 	ProveLiveliness(ctx context.Context, id uuid.UUID) error
 	RemoveDeadWorkers(ctx context.Context) error
+	UnassignedWorkInFuture(ctx context.Context, worker uuid.NullUUID) error
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Schedule, error)
 	UpdateStatusAndDetails(ctx context.Context, arg UpdateStatusAndDetailsParams) (History, error)
 }

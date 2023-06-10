@@ -1,11 +1,13 @@
 package api
 
 import (
+	"database/sql"
 	"net/http"
 	"time"
 
 	db "github.com/PSKP-95/schedular/db/sqlc"
 	"github.com/PSKP-95/schedular/hooks"
+	"github.com/PSKP-95/schedular/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -26,14 +28,21 @@ func (server *Server) createSchedule(ctx *fiber.Ctx) error {
 	if err != nil {
 		ctx.Status(http.StatusUnprocessableEntity).JSON(
 			&fiber.Map{"message": "request failed. " + err.Error()})
-		return err
+		return nil
 	}
 
 	err = server.validate.Struct(scheduleReq)
 
 	if err != nil {
 		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
-		return err
+		return nil
+	}
+
+	// validate cron expression
+	nextOccurence, err := util.CalculateNextOccurence(scheduleReq.Cron)
+	if err != nil {
+		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
+		return nil
 	}
 
 	scheduleParams := db.CreateScheduleParams{
@@ -52,11 +61,28 @@ func (server *Server) createSchedule(ctx *fiber.Ctx) error {
 			switch pqErr.Code.Name() {
 			case "foreign_key_violation", "unique_violation":
 				ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
-				return err
+				return nil
 			}
 		}
 		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
-		return err
+		return nil
+	}
+
+	occurenceParams := db.CreateOccurenceParams{
+		Schedule: schedule.ID,
+		Manual:   false,
+		Status:   db.StatusPending,
+		Occurence: sql.NullTime{
+			Time:  nextOccurence,
+			Valid: true,
+		},
+	}
+
+	_, err = server.store.CreateOccurence(ctx.Context(), occurenceParams)
+
+	if err != nil {
+		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
+		return nil
 	}
 
 	ctx.Status(http.StatusCreated).JSON(schedule)
@@ -192,6 +218,10 @@ func (server *Server) triggerSchedule(ctx *fiber.Ctx) error {
 		Schedule: schedule.ID,
 		Manual:   true,
 		Status:   db.StatusPending,
+		Worker: uuid.NullUUID{
+			UUID:  server.worker.GetWorkerId(),
+			Valid: true,
+		},
 	}
 
 	occurence, err := server.store.CreateOccurence(ctx.Context(), occurenceParams)

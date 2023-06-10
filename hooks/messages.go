@@ -6,6 +6,7 @@ type MsgType int
 
 const (
 	TRIGGER MsgType = iota
+	SCHEDULED
 	FAILED
 	SUCCESS
 )
