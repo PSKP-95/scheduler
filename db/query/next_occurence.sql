@@ -21,7 +21,7 @@ WHERE id = $1;
 -- name: UnassignedWorkInFuture :exec
 UPDATE next_occurence 
 SET worker = $1
-WHERE occurence < (CURRENT_TIMESTAMP + INTERVAL '300' SECOND) and worker IS NULL;
+WHERE occurence < (CURRENT_TIMESTAMP + $2 * INTERVAL '1 second') and worker IS NULL;
 
 -- name: MyExpiredWork :many
 SELECT * FROM next_occurence

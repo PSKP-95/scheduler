@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	db "github.com/PSKP-95/schedular/db/sqlc"
 	"github.com/PSKP-95/schedular/hooks"
 	"github.com/google/uuid"
 )
@@ -30,10 +31,14 @@ func (worker *Worker) punchCard() {
 }
 
 func (worker *Worker) checkForWork() {
-	err := worker.store.UnassignedWorkInFuture(context.Background(), uuid.NullUUID{
-		UUID:  worker.GetWorkerId(),
-		Valid: true,
-	})
+	params := db.UnassignedWorkInFutureParams{
+		Worker: uuid.NullUUID{
+			UUID:  worker.id,
+			Valid: true,
+		},
+		Column2: worker.config.WorkLookAheadSec,
+	}
+	err := worker.store.UnassignedWorkInFuture(context.Background(), params)
 
 	if err != nil {
 		worker.Logger.ErrorLog.Println(err)

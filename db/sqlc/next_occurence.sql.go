@@ -124,10 +124,15 @@ func (q *Queries) MyExpiredWork(ctx context.Context, worker uuid.NullUUID) ([]Ne
 const unassignedWorkInFuture = `-- name: UnassignedWorkInFuture :exec
 UPDATE next_occurence 
 SET worker = $1
-WHERE occurence < (CURRENT_TIMESTAMP + INTERVAL '300' SECOND) and worker IS NULL
+WHERE occurence < (CURRENT_TIMESTAMP + $2 * INTERVAL '1 second') and worker IS NULL
 `
 
-func (q *Queries) UnassignedWorkInFuture(ctx context.Context, worker uuid.NullUUID) error {
-	_, err := q.db.ExecContext(ctx, unassignedWorkInFuture, worker)
+type UnassignedWorkInFutureParams struct {
+	Worker  uuid.NullUUID `json:"worker"`
+	Column2 interface{}   `json:"column_2"`
+}
+
+func (q *Queries) UnassignedWorkInFuture(ctx context.Context, arg UnassignedWorkInFutureParams) error {
+	_, err := q.db.ExecContext(ctx, unassignedWorkInFuture, arg.Worker, arg.Column2)
 	return err
 }
