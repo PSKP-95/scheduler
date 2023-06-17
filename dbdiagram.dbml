@@ -37,6 +37,7 @@ Table next_occurence {
     worker
     occurence
     schedule
+    (schedule, occurence) [unique]
   }
 }
 

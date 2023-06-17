@@ -52,6 +52,8 @@ CREATE INDEX ON "next_occurence" ("occurence");
 
 CREATE INDEX ON "next_occurence" ("schedule");
 
+CREATE UNIQUE INDEX ON "next_occurence" ("schedule", "occurence");
+
 CREATE INDEX ON "history" ("schedule");
 
 COMMENT ON COLUMN "schedules"."till" IS 'till what timestamp this schedule will run';
