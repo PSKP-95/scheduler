@@ -1,10 +1,10 @@
 package api
 
 import (
-	db "github.com/PSKP-95/schedular/db/sqlc"
-	"github.com/PSKP-95/schedular/hooks"
-	"github.com/PSKP-95/schedular/util"
-	"github.com/PSKP-95/schedular/worker"
+	db "github.com/PSKP-95/scheduler/db/sqlc"
+	"github.com/PSKP-95/scheduler/hooks"
+	"github.com/PSKP-95/scheduler/util"
+	"github.com/PSKP-95/scheduler/worker"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"

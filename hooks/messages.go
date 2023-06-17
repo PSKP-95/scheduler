@@ -1,6 +1,6 @@
 package hooks
 
-import db "github.com/PSKP-95/schedular/db/sqlc"
+import db "github.com/PSKP-95/scheduler/db/sqlc"
 
 type MsgType int
 

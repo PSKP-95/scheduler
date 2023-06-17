@@ -5,11 +5,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/PSKP-95/schedular/api"
-	db "github.com/PSKP-95/schedular/db/sqlc"
-	"github.com/PSKP-95/schedular/hooks"
-	"github.com/PSKP-95/schedular/util"
-	"github.com/PSKP-95/schedular/worker"
+	"github.com/PSKP-95/scheduler/api"
+	db "github.com/PSKP-95/scheduler/db/sqlc"
+	"github.com/PSKP-95/scheduler/hooks"
+	"github.com/PSKP-95/scheduler/util"
+	"github.com/PSKP-95/scheduler/worker"
 	_ "github.com/lib/pq"
 )
 

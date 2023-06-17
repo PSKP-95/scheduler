@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	db "github.com/PSKP-95/schedular/db/sqlc"
+	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )

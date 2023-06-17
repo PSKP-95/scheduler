@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"time"
 
-	db "github.com/PSKP-95/schedular/db/sqlc"
-	"github.com/PSKP-95/schedular/util"
+	db "github.com/PSKP-95/scheduler/db/sqlc"
+	"github.com/PSKP-95/scheduler/util"
 )
 
 type Executor struct {

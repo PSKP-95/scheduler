@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	db "github.com/PSKP-95/schedular/db/sqlc"
-	"github.com/PSKP-95/schedular/hooks"
+	db "github.com/PSKP-95/scheduler/db/sqlc"
+	"github.com/PSKP-95/scheduler/hooks"
 	"github.com/google/uuid"
 )
 

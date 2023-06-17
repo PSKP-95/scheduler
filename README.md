@@ -1,6 +1,6 @@
 # Scheduler
 
-Schedular can perform actions on cron expression. It uses postgres for storing schedules.
+Scheduler can perform actions on cron expression. It uses postgres for storing schedules.
 
 ## Architecture
 
