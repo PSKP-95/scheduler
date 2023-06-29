@@ -35,7 +35,7 @@ func main() {
 
 	executorChan := make(chan hooks.Message)
 
-	store := db.New(conn)
+	store := db.NewStore(conn)
 	executor, err := hooks.NewExecutor(config, store, executorChan, logger)
 
 	if err != nil {

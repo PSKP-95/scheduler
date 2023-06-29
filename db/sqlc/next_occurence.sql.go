@@ -13,6 +13,22 @@ import (
 	"github.com/google/uuid"
 )
 
+const assignUnassignedWork = `-- name: AssignUnassignedWork :exec
+UPDATE next_occurence 
+SET worker = $1
+WHERE occurence < (CURRENT_TIMESTAMP + $2 * INTERVAL '1 second') and worker IS NULL
+`
+
+type AssignUnassignedWorkParams struct {
+	Worker  uuid.NullUUID `json:"worker"`
+	Column2 interface{}   `json:"column_2"`
+}
+
+func (q *Queries) AssignUnassignedWork(ctx context.Context, arg AssignUnassignedWorkParams) error {
+	_, err := q.db.ExecContext(ctx, assignUnassignedWork, arg.Worker, arg.Column2)
+	return err
+}
+
 const createOccurence = `-- name: CreateOccurence :one
 INSERT INTO next_occurence (
   schedule,
@@ -132,20 +148,4 @@ func (q *Queries) MyExpiredWork(ctx context.Context, worker uuid.NullUUID) ([]Ne
 		return nil, err
 	}
 	return items, nil
-}
-
-const unassignedWorkInFuture = `-- name: UnassignedWorkInFuture :exec
-UPDATE next_occurence 
-SET worker = $1
-WHERE occurence < (CURRENT_TIMESTAMP + $2 * INTERVAL '1 second') and worker IS NULL
-`
-
-type UnassignedWorkInFutureParams struct {
-	Worker  uuid.NullUUID `json:"worker"`
-	Column2 interface{}   `json:"column_2"`
-}
-
-func (q *Queries) UnassignedWorkInFuture(ctx context.Context, arg UnassignedWorkInFutureParams) error {
-	_, err := q.db.ExecContext(ctx, unassignedWorkInFuture, arg.Worker, arg.Column2)
-	return err
 }

@@ -54,6 +54,8 @@ func (server *Server) setupRouter() {
 	api.Get("/schedule/:id/trigger", server.triggerSchedule)
 	api.Get("/schedule/:id/history", server.getScheduleHistory)
 
+	app.Static("/", "./ui")
+
 	server.app = app
 }
 

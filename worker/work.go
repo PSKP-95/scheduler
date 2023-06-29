@@ -6,7 +6,6 @@ import (
 
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
-	"github.com/google/uuid"
 )
 
 func (worker *Worker) Work() {
@@ -20,14 +19,61 @@ func (worker *Worker) Work() {
 		case <-periodicTicker.C:
 			worker.removeDeadBodies()
 			worker.punchCard()
-			worker.checkForWork()
-			worker.doWork()
-			worker.getImmediateWork(alarmTicker)
+			worker.periodicPoll(alarmTicker)
 
 		case <-alarmTicker.C:
-			worker.doWork()
-			worker.getImmediateWork(alarmTicker)
+			worker.alarmPoll(alarmTicker)
 		}
+	}
+}
+
+func (worker *Worker) periodicPoll(ticker *time.Ticker) {
+	scheduleOpParams := db.ScheduleOpParams{
+		Wid:          worker.id,
+		LookAheadSec: worker.config.WorkLookAheadSec,
+	}
+	scheduleOpResult, err := worker.store.ScheduleOpPeriodic(context.Background(), scheduleOpParams)
+	if err != nil {
+		worker.Logger.ErrorLog.Println(err)
+	}
+
+	until := time.Until(scheduleOpResult.NextWork)
+	if until > 0 {
+		ticker.Reset(until)
+	}
+
+	for _, v := range scheduleOpResult.ExpiredNextOccurences {
+		msg := hooks.Message{
+			Occurence: v,
+			Type:      hooks.SCHEDULED,
+		}
+		worker.Logger.InfoLog.Println(msg)
+		worker.executor.Submit(msg)
+	}
+}
+
+func (worker *Worker) alarmPoll(ticker *time.Ticker) {
+	scheduleOpParams := db.ScheduleOpParams{
+		Wid:          worker.id,
+		LookAheadSec: worker.config.WorkLookAheadSec,
+	}
+	scheduleOpResult, err := worker.store.ScheduleOpAlarm(context.Background(), scheduleOpParams)
+	if err != nil {
+		worker.Logger.ErrorLog.Println(err)
+	}
+
+	until := time.Until(scheduleOpResult.NextWork)
+	if until > 0 {
+		ticker.Reset(until)
+	}
+
+	for _, v := range scheduleOpResult.ExpiredNextOccurences {
+		msg := hooks.Message{
+			Occurence: v,
+			Type:      hooks.SCHEDULED,
+		}
+		worker.Logger.InfoLog.Println(msg)
+		worker.executor.Submit(msg)
 	}
 }
 
@@ -36,61 +82,7 @@ func (worker *Worker) removeDeadBodies() {
 	worker.Logger.ErrorLog.Println(err)
 }
 
-func (worker *Worker) getImmediateWork(ticker *time.Ticker) {
-	nTime, err := worker.store.GetNextImmediateWork(context.Background(), uuid.NullUUID{
-		UUID:  worker.GetWorkerId(),
-		Valid: true,
-	})
-
-	if err != nil {
-		worker.Logger.ErrorLog.Println(err)
-	}
-	until := time.Until(nTime)
-
-	if until > 0 {
-		ticker.Reset(until)
-	}
-}
-
 func (worker *Worker) punchCard() {
 	err := worker.store.ProveLiveliness(context.Background(), worker.id)
 	worker.Logger.ErrorLog.Println(err)
-}
-
-func (worker *Worker) checkForWork() {
-	params := db.UnassignedWorkInFutureParams{
-		Worker: uuid.NullUUID{
-			UUID:  worker.id,
-			Valid: true,
-		},
-		Column2: worker.config.WorkLookAheadSec,
-	}
-	err := worker.store.UnassignedWorkInFuture(context.Background(), params)
-
-	if err != nil {
-		worker.Logger.ErrorLog.Println(err)
-	}
-}
-
-func (worker *Worker) doWork() {
-	work, err := worker.store.MyExpiredWork(context.Background(), uuid.NullUUID{
-		UUID:  worker.GetWorkerId(),
-		Valid: true,
-	})
-
-	worker.Logger.InfoLog.Println(work)
-
-	if err != nil {
-		worker.Logger.ErrorLog.Println(err)
-		return
-	}
-
-	for _, v := range work {
-		msg := hooks.Message{
-			Occurence: v,
-			Type:      hooks.SCHEDULED,
-		}
-		worker.Logger.InfoLog.Println(msg)
-		worker.executor.Submit(msg)
-	}
 }

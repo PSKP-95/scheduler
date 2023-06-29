@@ -18,7 +18,7 @@ WHERE id = $1 LIMIT 1;
 DELETE FROM next_occurence
 WHERE id = $1;
 
--- name: UnassignedWorkInFuture :exec
+-- name: AssignUnassignedWork :exec
 UPDATE next_occurence 
 SET worker = $1
 WHERE occurence < (CURRENT_TIMESTAMP + $2 * INTERVAL '1 second') and worker IS NULL;
