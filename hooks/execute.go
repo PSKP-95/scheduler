@@ -2,7 +2,6 @@ package hooks
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	db "github.com/PSKP-95/scheduler/db/sqlc"
@@ -45,54 +44,41 @@ func (ex *Executor) Execute() {
 			ex.createHistoryForOccurence(&msg)
 			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
 		case SCHEDULED:
-			ex.createHistoryForOccurence(&msg)
-			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
-			ex.createNewOccurence(msg.Schedule)
-		case SUCCESS:
-			ex.store.UpdateStatusAndDetails(context.Background(),
-				db.UpdateStatusAndDetailsParams{
-					OccurenceID: msg.Occurence.ID,
-					Status:      db.StatusSuccess,
-					Details:     msg.Details,
-				},
-			)
-			ex.store.DeleteOccurence(context.Background(), msg.Occurence.ID)
-		case FAILED:
-			ex.store.UpdateStatusAndDetails(context.Background(),
-				db.UpdateStatusAndDetailsParams{
-					OccurenceID: msg.Occurence.ID,
-					Status:      db.StatusFailure,
-					Details:     msg.Details,
-				},
-			)
-			err := ex.store.DeleteOccurence(context.Background(), msg.Occurence.ID)
+			schedule, err := ex.store.GetSchedule(context.Background(), msg.Occurence.Schedule)
 			if err != nil {
-				ex.Logger.ErrorLog.Fatalln(err)
+				ex.Logger.ErrorLog.Println(err)
+			}
+			msg.Schedule = schedule
+
+			err = ex.store.UpdateHistoryAndOccurence(context.Background(), msg.Schedule, msg.Occurence)
+			if err != nil {
+				ex.Logger.ErrorLog.Println(err)
+			}
+
+			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
+		case SUCCESS:
+			params := db.UpdateHistoryAndDeleteOccurenceParams{
+				Schedule:  msg.Schedule,
+				Occurence: msg.Occurence,
+				Details:   msg.Details,
+				Status:    db.StatusSuccess,
+			}
+			err := ex.store.UpdateHistoryAndDeleteOccurence(context.Background(), params)
+			if err != nil {
+				ex.Logger.ErrorLog.Println(err)
+			}
+		case FAILED:
+			params := db.UpdateHistoryAndDeleteOccurenceParams{
+				Schedule:  msg.Schedule,
+				Occurence: msg.Occurence,
+				Details:   msg.Details,
+				Status:    db.StatusFailure,
+			}
+			err := ex.store.UpdateHistoryAndDeleteOccurence(context.Background(), params)
+			if err != nil {
+				ex.Logger.ErrorLog.Println(err)
 			}
 		}
-	}
-}
-
-func (ex *Executor) createNewOccurence(schedule db.Schedule) {
-	nextOccurence, err := util.CalculateNextOccurence(schedule.Cron)
-	if err != nil {
-		ex.Logger.ErrorLog.Fatalln(err)
-	}
-
-	occurenceParams := db.CreateOccurenceParams{
-		Schedule: schedule.ID,
-		Manual:   false,
-		Status:   db.StatusPending,
-		Occurence: sql.NullTime{
-			Time:  nextOccurence,
-			Valid: true,
-		},
-	}
-
-	_, err = ex.store.CreateOccurence(context.Background(), occurenceParams)
-
-	if err != nil {
-		ex.Logger.ErrorLog.Println(err)
 	}
 }
 

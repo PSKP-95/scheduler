@@ -6,6 +6,7 @@ import (
 
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
+	"github.com/google/uuid"
 )
 
 func (worker *Worker) Work() {
@@ -17,57 +18,61 @@ func (worker *Worker) Work() {
 	for {
 		select {
 		case <-periodicTicker.C:
+			alarmTicker.Stop()
 			worker.removeDeadBodies()
 			worker.punchCard()
-			worker.periodicPoll(alarmTicker)
+			worker.getNewWork()
+			worker.poll(alarmTicker)
 
 		case <-alarmTicker.C:
-			worker.alarmPoll(alarmTicker)
+			alarmTicker.Stop()
+			worker.poll(alarmTicker)
 		}
 	}
 }
 
-func (worker *Worker) periodicPoll(ticker *time.Ticker) {
-	scheduleOpParams := db.ScheduleOpParams{
-		Wid:          worker.id,
-		LookAheadSec: worker.config.WorkLookAheadSec,
+func (worker *Worker) getNewWork() {
+	params := db.AssignUnassignedWorkParams{
+		Worker: uuid.NullUUID{
+			UUID:  worker.id,
+			Valid: true,
+		},
+		Column2: worker.config.WorkLookAheadSec,
 	}
-	scheduleOpResult, err := worker.store.ScheduleOpPeriodic(context.Background(), scheduleOpParams)
+
+	err := worker.store.AssignUnassignedWork(context.Background(), params)
 	if err != nil {
 		worker.Logger.ErrorLog.Println(err)
-	}
-
-	until := time.Until(scheduleOpResult.NextWork)
-	if until > 0 {
-		ticker.Reset(until)
-	}
-
-	for _, v := range scheduleOpResult.ExpiredNextOccurences {
-		msg := hooks.Message{
-			Occurence: v,
-			Type:      hooks.SCHEDULED,
-		}
-		worker.Logger.InfoLog.Println(msg)
-		worker.executor.Submit(msg)
 	}
 }
 
-func (worker *Worker) alarmPoll(ticker *time.Ticker) {
-	scheduleOpParams := db.ScheduleOpParams{
-		Wid:          worker.id,
-		LookAheadSec: worker.config.WorkLookAheadSec,
-	}
-	scheduleOpResult, err := worker.store.ScheduleOpAlarm(context.Background(), scheduleOpParams)
+func (worker *Worker) poll(ticker *time.Ticker) {
+	expiredOccurence, err := worker.store.MyExpiredWork(context.Background(), uuid.NullUUID{
+		UUID:  worker.id,
+		Valid: true,
+	})
 	if err != nil {
 		worker.Logger.ErrorLog.Println(err)
 	}
 
-	until := time.Until(scheduleOpResult.NextWork)
+	worker.submitBulkWorkToExecutor(expiredOccurence)
+
+	nextTime, err := worker.store.GetNextImmediateWork(context.Background(), uuid.NullUUID{
+		UUID:  worker.id,
+		Valid: true,
+	})
+	if err != nil {
+		worker.Logger.ErrorLog.Println(err)
+	}
+
+	until := time.Until(nextTime)
 	if until > 0 {
 		ticker.Reset(until)
 	}
+}
 
-	for _, v := range scheduleOpResult.ExpiredNextOccurences {
+func (worker *Worker) submitBulkWorkToExecutor(expiredOccurences []db.NextOccurence) {
+	for _, v := range expiredOccurences {
 		msg := hooks.Message{
 			Occurence: v,
 			Type:      hooks.SCHEDULED,
@@ -79,10 +84,14 @@ func (worker *Worker) alarmPoll(ticker *time.Ticker) {
 
 func (worker *Worker) removeDeadBodies() {
 	err := worker.store.RemoveDeadWorkers(context.Background())
-	worker.Logger.ErrorLog.Println(err)
+	if err != nil {
+		worker.Logger.ErrorLog.Println(err)
+	}
 }
 
 func (worker *Worker) punchCard() {
 	err := worker.store.ProveLiveliness(context.Background(), worker.id)
-	worker.Logger.ErrorLog.Println(err)
+	if err != nil {
+		worker.Logger.ErrorLog.Println(err)
+	}
 }

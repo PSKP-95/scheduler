@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/PSKP-95/scheduler/util"
 )
 
 type Store interface {
 	Querier
-	ScheduleOpPeriodic(ctx context.Context, scheduleOpsParams ScheduleOpParams) (ScheduleOpResult, error)
-	ScheduleOpAlarm(ctx context.Context, scheduleOpsParams ScheduleOpParams) (ScheduleOpResult, error)
+	UpdateHistoryAndOccurence(ctx context.Context, schedule Schedule, occurence NextOccurence) error
+	UpdateHistoryAndDeleteOccurence(ctx context.Context, params UpdateHistoryAndDeleteOccurenceParams) error
 }
 
 // store provides all functions to execute db queries and transactions
@@ -46,75 +46,81 @@ func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) erro
 	return tx.Commit()
 }
 
-type ScheduleOpParams struct {
-	Wid          uuid.UUID
-	LookAheadSec string
-}
-
-type ScheduleOpResult struct {
-	ExpiredNextOccurences []NextOccurence
-	NextWork              time.Time
-}
-
-func (store *SQLStore) ScheduleOpPeriodic(ctx context.Context, scheduleOpsParams ScheduleOpParams) (ScheduleOpResult, error) {
-	var result ScheduleOpResult
+func (store *SQLStore) UpdateHistoryAndOccurence(ctx context.Context, schedule Schedule, occurence NextOccurence) error {
 	err := store.execTx(ctx, func(q *Queries) error {
-		params := AssignUnassignedWorkParams{
-			Worker: uuid.NullUUID{
-				UUID:  scheduleOpsParams.Wid,
+		historyParams := getHistoryParam(schedule, occurence)
+		_, err := store.CreateHistory(context.Background(), historyParams)
+		if err != nil {
+			return err
+		}
+
+		nextOccurence, err := util.CalculateNextOccurence(schedule.Cron)
+		if err != nil {
+			return err
+		}
+
+		occurenceParams := CreateOccurenceParams{
+			Schedule: schedule.ID,
+			Manual:   false,
+			Status:   StatusPending,
+			Occurence: sql.NullTime{
+				Time:  nextOccurence,
 				Valid: true,
 			},
-			Column2: scheduleOpsParams.LookAheadSec,
 		}
 
-		err := store.AssignUnassignedWork(context.Background(), params)
+		_, err = store.CreateOccurence(context.Background(), occurenceParams)
+
 		if err != nil {
 			return err
 		}
-
-		newWork, err := store.MyExpiredWork(context.Background(), uuid.NullUUID{
-			UUID:  scheduleOpsParams.Wid,
-			Valid: true,
-		})
-		if err != nil {
-			return err
-		}
-		result.ExpiredNextOccurences = append(result.ExpiredNextOccurences, newWork...)
-
-		result.NextWork, err = store.GetNextImmediateWork(context.Background(), uuid.NullUUID{
-			UUID:  scheduleOpsParams.Wid,
-			Valid: true,
-		})
-		if err != nil {
-			return err
-		}
-
 		return nil
 	})
-	return result, err
+
+	return err
 }
 
-func (store *SQLStore) ScheduleOpAlarm(ctx context.Context, scheduleOpsParams ScheduleOpParams) (ScheduleOpResult, error) {
-	var result ScheduleOpResult
+type UpdateHistoryAndDeleteOccurenceParams struct {
+	Schedule  Schedule
+	Occurence NextOccurence
+	Details   string
+	Status    Status
+}
+
+func (store *SQLStore) UpdateHistoryAndDeleteOccurence(ctx context.Context, params UpdateHistoryAndDeleteOccurenceParams) error {
+
 	err := store.execTx(ctx, func(q *Queries) error {
-		newWork, err := store.MyExpiredWork(context.Background(), uuid.NullUUID{
-			UUID:  scheduleOpsParams.Wid,
-			Valid: true,
-		})
+		_, err := store.UpdateStatusAndDetails(context.Background(),
+			UpdateStatusAndDetailsParams{
+				OccurenceID: params.Occurence.ID,
+				Status:      params.Status,
+				Details:     params.Details,
+			},
+		)
 		if err != nil {
 			return err
 		}
-		result.ExpiredNextOccurences = append(result.ExpiredNextOccurences, newWork...)
 
-		result.NextWork, err = store.GetNextImmediateWork(context.Background(), uuid.NullUUID{
-			UUID:  scheduleOpsParams.Wid,
-			Valid: true,
-		})
+		err = store.DeleteOccurence(context.Background(), params.Occurence.ID)
 		if err != nil {
 			return err
 		}
 
 		return nil
 	})
-	return result, err
+	return err
+}
+
+func getHistoryParam(schedule Schedule, occurence NextOccurence) CreateHistoryParams {
+	historyParam := CreateHistoryParams{
+		OccurenceID: occurence.ID,
+		Schedule:    schedule.ID,
+		Status:      StatusRunning,
+		Manual:      occurence.Manual,
+		Details:     "",
+		ScheduledAt: occurence.Occurence.Time,
+		StartedAt:   time.Now(),
+	}
+
+	return historyParam
 }
