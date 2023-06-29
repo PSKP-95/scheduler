@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -62,6 +63,18 @@ WHERE id = $1
 func (q *Queries) DeleteOccurence(ctx context.Context, id int32) error {
 	_, err := q.db.ExecContext(ctx, deleteOccurence, id)
 	return err
+}
+
+const getNextImmediateWork = `-- name: GetNextImmediateWork :one
+SELECT MIN(occurence)::timestamptz FROM next_occurence
+WHERE occurence > CURRENT_TIMESTAMP and worker = $1
+`
+
+func (q *Queries) GetNextImmediateWork(ctx context.Context, worker uuid.NullUUID) (time.Time, error) {
+	row := q.db.QueryRowContext(ctx, getNextImmediateWork, worker)
+	var column_1 time.Time
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const getOccurence = `-- name: GetOccurence :one

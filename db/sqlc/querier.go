@@ -6,6 +6,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -18,6 +19,7 @@ type Querier interface {
 	DeleteOccurence(ctx context.Context, id int32) error
 	DeleteSchedule(ctx context.Context, id uuid.UUID) error
 	DeleteWorker(ctx context.Context, id uuid.UUID) error
+	GetNextImmediateWork(ctx context.Context, worker uuid.NullUUID) (time.Time, error)
 	GetOccurence(ctx context.Context, id int32) (NextOccurence, error)
 	GetSchedule(ctx context.Context, id uuid.UUID) (Schedule, error)
 	GetWorker(ctx context.Context, id uuid.UUID) (PunchCard, error)

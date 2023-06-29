@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	db "github.com/PSKP-95/scheduler/db/sqlc"
@@ -11,18 +10,46 @@ import (
 )
 
 func (worker *Worker) Work() {
-	for range time.Tick(10 * time.Second) {
-		fmt.Println("Hi from worker")
-		worker.removeDeadBodies()
-		worker.punchCard()
-		worker.checkForWork()
-		worker.doWork()
+	periodicTicker := time.NewTicker(10 * time.Second)
+	defer periodicTicker.Stop()
+
+	alarmTicker := time.NewTicker(15 * time.Second)
+
+	for {
+		select {
+		case <-periodicTicker.C:
+			worker.removeDeadBodies()
+			worker.punchCard()
+			worker.checkForWork()
+			worker.doWork()
+			worker.getImmediateWork(alarmTicker)
+
+		case <-alarmTicker.C:
+			worker.doWork()
+			worker.getImmediateWork(alarmTicker)
+		}
 	}
 }
 
 func (worker *Worker) removeDeadBodies() {
 	err := worker.store.RemoveDeadWorkers(context.Background())
 	worker.Logger.ErrorLog.Println(err)
+}
+
+func (worker *Worker) getImmediateWork(ticker *time.Ticker) {
+	nTime, err := worker.store.GetNextImmediateWork(context.Background(), uuid.NullUUID{
+		UUID:  worker.GetWorkerId(),
+		Valid: true,
+	})
+
+	if err != nil {
+		worker.Logger.ErrorLog.Println(err)
+	}
+	until := time.Until(nTime)
+
+	if until > 0 {
+		ticker.Reset(until)
+	}
 }
 
 func (worker *Worker) punchCard() {

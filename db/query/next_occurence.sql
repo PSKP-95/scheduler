@@ -27,3 +27,7 @@ WHERE occurence < (CURRENT_TIMESTAMP + $2 * INTERVAL '1 second') and worker IS N
 SELECT * FROM next_occurence
 WHERE occurence < CURRENT_TIMESTAMP and worker = $1
 ORDER BY occurence;
+
+-- name: GetNextImmediateWork :one
+SELECT MIN(occurence)::timestamptz FROM next_occurence
+WHERE occurence > CURRENT_TIMESTAMP and worker = $1;

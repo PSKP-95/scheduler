@@ -92,7 +92,7 @@ func (ex *Executor) createNewOccurence(schedule db.Schedule) {
 	_, err = ex.store.CreateOccurence(context.Background(), occurenceParams)
 
 	if err != nil {
-		ex.Logger.ErrorLog.Fatalln(err)
+		ex.Logger.ErrorLog.Println(err)
 	}
 }
 
@@ -105,7 +105,7 @@ func (ex *Executor) createHistoryForOccurence(msg *Message) {
 	historyParam := getHistoryParam(schedule, msg.Occurence)
 	_, err = ex.store.CreateHistory(context.Background(), historyParam)
 	if err != nil {
-		ex.Logger.ErrorLog.Fatalln(err)
+		ex.Logger.ErrorLog.Println(err)
 	}
 }
 
