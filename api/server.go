@@ -37,7 +37,9 @@ func NewServer(config util.Config, store db.Store, executor *hooks.Executor, wor
 }
 
 func (server *Server) setupRouter() {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ServerHeader: "Fiber",
+	})
 
 	// add middlewares
 	app.Use(logger.New())

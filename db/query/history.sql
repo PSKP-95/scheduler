@@ -13,7 +13,7 @@ INSERT INTO history (
 ) RETURNING *;
 
 -- name: ListHistory :many
-SELECT * FROM history
+SELECT *, COUNT(*) OVER () AS total_records FROM history
 WHERE schedule = $1
 ORDER BY scheduled_at DESC
 LIMIT $2

@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"fmt"
+	"math"
 	"net/http"
 	"time"
 
@@ -263,6 +264,11 @@ func (server *Server) triggerSchedule(ctx *fiber.Ctx) error {
 	return nil
 }
 
+type ListSchedulesResponse struct {
+	Page      util.Page             `json:"page"`
+	Schedules []db.ListSchedulesRow `json:"schedules"`
+}
+
 func (server *Server) lisSchedule(ctx *fiber.Ctx) error {
 	page := int32(ctx.QueryInt("page", 1))
 	size := int32(ctx.QueryInt("size", 10))
@@ -279,7 +285,17 @@ func (server *Server) lisSchedule(ctx *fiber.Ctx) error {
 		return nil
 	}
 
-	ctx.Status(http.StatusOK).JSON(schedules)
+	schedulesResp := ListSchedulesResponse{
+		Schedules: schedules,
+		Page: util.Page{
+			Number:        page,
+			Size:          size,
+			TotalPages:    int32(math.Ceil(float64(schedules[0].TotalRecords) / float64(size))),
+			TotalElements: int32(schedules[0].TotalRecords),
+		},
+	}
+
+	ctx.Status(http.StatusOK).JSON(schedulesResp)
 
 	return nil
 }

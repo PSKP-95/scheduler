@@ -1,12 +1,19 @@
 package api
 
 import (
+	"math"
 	"net/http"
 
 	db "github.com/PSKP-95/scheduler/db/sqlc"
+	"github.com/PSKP-95/scheduler/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
+
+type ScheduleHistoryResponse struct {
+	Page    util.Page           `json:"page"`
+	History []db.ListHistoryRow `json:"history"`
+}
 
 func (server *Server) getScheduleHistory(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
@@ -30,7 +37,17 @@ func (server *Server) getScheduleHistory(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	ctx.Status(http.StatusOK).JSON(history)
+	scheduleHistoryResponse := ScheduleHistoryResponse{
+		History: history,
+		Page: util.Page{
+			Number:        page,
+			Size:          size,
+			TotalPages:    int32(math.Ceil(float64(history[0].TotalRecords) / float64(size))),
+			TotalElements: int32(history[0].TotalRecords),
+		},
+	}
+
+	ctx.Status(http.StatusOK).JSON(scheduleHistoryResponse)
 
 	return nil
 }

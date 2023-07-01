@@ -17,7 +17,7 @@ SELECT * FROM schedules
 WHERE id = $1 LIMIT 1;
 
 -- name: ListSchedules :many
-SELECT * FROM schedules
+SELECT *, COUNT(*) OVER () AS total_records FROM schedules
 WHERE owner = $1
 ORDER BY id
 LIMIT $2

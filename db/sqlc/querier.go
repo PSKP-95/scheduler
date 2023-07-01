@@ -24,8 +24,8 @@ type Querier interface {
 	GetOccurence(ctx context.Context, id int32) (NextOccurence, error)
 	GetSchedule(ctx context.Context, id uuid.UUID) (Schedule, error)
 	GetWorker(ctx context.Context, id uuid.UUID) (PunchCard, error)
-	ListHistory(ctx context.Context, arg ListHistoryParams) ([]History, error)
-	ListSchedules(ctx context.Context, arg ListSchedulesParams) ([]Schedule, error)
+	ListHistory(ctx context.Context, arg ListHistoryParams) ([]ListHistoryRow, error)
+	ListSchedules(ctx context.Context, arg ListSchedulesParams) ([]ListSchedulesRow, error)
 	ListWorkers(ctx context.Context, arg ListWorkersParams) ([]PunchCard, error)
 	MyExpiredWork(ctx context.Context, worker uuid.NullUUID) ([]NextOccurence, error)
 	ProveLiveliness(ctx context.Context, id uuid.UUID) error

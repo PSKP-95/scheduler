@@ -92,7 +92,7 @@ func (q *Queries) GetSchedule(ctx context.Context, id uuid.UUID) (Schedule, erro
 }
 
 const listSchedules = `-- name: ListSchedules :many
-SELECT id, cron, hook, owner, data, active, till, created_at, last_modified FROM schedules
+SELECT id, cron, hook, owner, data, active, till, created_at, last_modified, COUNT(*) OVER () AS total_records FROM schedules
 WHERE owner = $1
 ORDER BY id
 LIMIT $2
@@ -105,15 +105,28 @@ type ListSchedulesParams struct {
 	Offset int32  `json:"offset"`
 }
 
-func (q *Queries) ListSchedules(ctx context.Context, arg ListSchedulesParams) ([]Schedule, error) {
+type ListSchedulesRow struct {
+	ID           uuid.UUID `json:"id"`
+	Cron         string    `json:"cron"`
+	Hook         string    `json:"hook"`
+	Owner        string    `json:"owner"`
+	Data         string    `json:"data"`
+	Active       bool      `json:"active"`
+	Till         time.Time `json:"till"`
+	CreatedAt    time.Time `json:"created_at"`
+	LastModified time.Time `json:"last_modified"`
+	TotalRecords int64     `json:"-"`
+}
+
+func (q *Queries) ListSchedules(ctx context.Context, arg ListSchedulesParams) ([]ListSchedulesRow, error) {
 	rows, err := q.db.QueryContext(ctx, listSchedules, arg.Owner, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Schedule{}
+	items := []ListSchedulesRow{}
 	for rows.Next() {
-		var i Schedule
+		var i ListSchedulesRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Cron,
@@ -124,6 +137,7 @@ func (q *Queries) ListSchedules(ctx context.Context, arg ListSchedulesParams) ([
 			&i.Till,
 			&i.CreatedAt,
 			&i.LastModified,
+			&i.TotalRecords,
 		); err != nil {
 			return nil, err
 		}

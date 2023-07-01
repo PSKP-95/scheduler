@@ -64,7 +64,7 @@ func (q *Queries) CreateHistory(ctx context.Context, arg CreateHistoryParams) (H
 }
 
 const listHistory = `-- name: ListHistory :many
-SELECT occurence_id, schedule, status, details, manual, scheduled_at, started_at, completed_at FROM history
+SELECT occurence_id, schedule, status, details, manual, scheduled_at, started_at, completed_at, COUNT(*) OVER () AS total_records FROM history
 WHERE schedule = $1
 ORDER BY scheduled_at DESC
 LIMIT $2
@@ -77,15 +77,27 @@ type ListHistoryParams struct {
 	Offset   int32     `json:"offset"`
 }
 
-func (q *Queries) ListHistory(ctx context.Context, arg ListHistoryParams) ([]History, error) {
+type ListHistoryRow struct {
+	OccurenceID  int32     `json:"occurence_id"`
+	Schedule     uuid.UUID `json:"schedule"`
+	Status       Status    `json:"status"`
+	Details      string    `json:"details"`
+	Manual       bool      `json:"manual"`
+	ScheduledAt  time.Time `json:"scheduled_at"`
+	StartedAt    time.Time `json:"started_at"`
+	CompletedAt  time.Time `json:"completed_at"`
+	TotalRecords int64     `json:"-"`
+}
+
+func (q *Queries) ListHistory(ctx context.Context, arg ListHistoryParams) ([]ListHistoryRow, error) {
 	rows, err := q.db.QueryContext(ctx, listHistory, arg.Schedule, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []History{}
+	items := []ListHistoryRow{}
 	for rows.Next() {
-		var i History
+		var i ListHistoryRow
 		if err := rows.Scan(
 			&i.OccurenceID,
 			&i.Schedule,
@@ -95,6 +107,7 @@ func (q *Queries) ListHistory(ctx context.Context, arg ListHistoryParams) ([]His
 			&i.ScheduledAt,
 			&i.StartedAt,
 			&i.CompletedAt,
+			&i.TotalRecords,
 		); err != nil {
 			return nil, err
 		}
