@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Schedule } from '../models/schedule.model';
+import { Schedule, SchedulesResponse } from '../models/schedule.model';
 import { Observable } from 'rxjs';
 import {map} from 'rxjs/operators';
 
@@ -13,8 +13,8 @@ export class SchedulesService {
 
   constructor(private http: HttpClient) { }
 
-  getSchedules(): Observable<Schedule[]> {
-    return this.http.get<any>(`${this.scheduleUrl}`)
+  getSchedules(size: number, page: number): Observable<SchedulesResponse> {
+    return this.http.get<any>(`${this.scheduleUrl}?page=${page}&size=${size}`)
       .pipe(
         map(value => this.schedules = value)
       );

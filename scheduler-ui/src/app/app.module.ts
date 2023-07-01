@@ -11,6 +11,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
 
 @NgModule({
   declarations: [
@@ -24,6 +25,7 @@ import { MatTableModule } from '@angular/material/table';
     AppRoutingModule,
     MatToolbarModule,
     MatButtonModule,
+    MatPaginatorModule,
     MatIconModule,
     MatTableModule,
     BrowserAnimationsModule

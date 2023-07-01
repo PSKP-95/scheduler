@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { History, Schedule } from 'src/app/models/schedule.model';
+import { History, Page, Schedule } from 'src/app/models/schedule.model';
 import { ScheduleService } from 'src/app/services/schedule.service';
 
 @Component({
@@ -12,6 +12,13 @@ export class ScheduleComponent {
   id: string = '';
   schedule: Schedule = new Schedule;
   history: History[] = [];
+  page: Page;
+  paginationState = {
+    length: 10,
+    pageIndex: 1,
+    pageSize: 10,
+    previousPageIndex: 0,
+  };
 
   constructor(private scheduleService: ScheduleService, private route: ActivatedRoute) { }
 
@@ -29,9 +36,15 @@ export class ScheduleComponent {
         this.schedule = data;
       }
     );
-    this.scheduleService.loadHistory(this.id).subscribe(
+    this.loadHistory();
+  }
+
+  loadHistory() {
+    this.scheduleService.loadHistory(this.id, this.paginationState.pageSize, this.paginationState.pageIndex).subscribe(
       data => {
-        this.history = data;
+        this.history = data.history;
+        this.page = data.page;
+        this.paginationState.length = this.page.totalElements;
       }
     )
   }
@@ -42,5 +55,12 @@ export class ScheduleComponent {
     if (((enddate.getTime() - startdate.getTime()) / 1000) < 5)
       return true;
     return false;
+  }
+
+  paginationChanged(event: any) {
+    this.paginationState.length = event.length;
+    this.paginationState.pageIndex = event.pageIndex + 1;
+    this.paginationState.pageSize = event.pageSize;
+    this.loadHistory();
   }
 }

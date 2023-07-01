@@ -44,4 +44,6 @@
       <div class="col col-5" data-label="Started At">{{row.started_at}}</div>
     </li>
   </ul>
+  <mat-paginator (page)="paginationChanged($event)" [length]="paginationState.length" [pageSizeOptions]="[10, 20, 30]" aria-label="Select page">
+  </mat-paginator>
 </div>

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { Schedule } from 'src/app/models/schedule.model';
+import { Page, Schedule } from 'src/app/models/schedule.model';
 import { SchedulesService } from 'src/app/services/schedules.service';
 
 @Component({
@@ -10,6 +10,13 @@ import { SchedulesService } from 'src/app/services/schedules.service';
 })
 export class SchedulesComponent {
   schedules: Schedule[] = [];
+  page: Page;
+  paginationState = {
+    length: 10,
+    pageIndex: 1,
+    pageSize: 10,
+    previousPageIndex: 0,
+  };
 
   constructor(private schedulesService: SchedulesService, private router: Router) { }
 
@@ -18,14 +25,25 @@ export class SchedulesComponent {
   }
 
   loadSchedules() {
-    this.schedulesService.getSchedules().subscribe(
+    this.schedulesService.getSchedules(this.paginationState.pageSize, this.paginationState.pageIndex).subscribe(
       data => {
-        this.schedules = data;
+        this.schedules = data.schedules;
+        this.page = data.page;
+        this.paginationState.length = this.page.totalElements;
       }
     );
+
+    console.log(this.paginationState);
   }
 
   openSchedule(id: string): void {
     this.router.navigate([`/schedule/${id}`]);
+  }
+
+  paginationChanged(event: any) {
+    this.paginationState.length = event.length;
+    this.paginationState.pageIndex = event.pageIndex + 1;
+    this.paginationState.pageSize = event.pageSize;
+    this.loadSchedules();
   }
 }
