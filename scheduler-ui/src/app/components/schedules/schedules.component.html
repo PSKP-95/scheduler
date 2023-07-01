@@ -1,0 +1,18 @@
+<div class="container">
+  <ul class="responsive-table">
+    <li class="table-header">
+      <div class="col col-1">Id</div>
+      <div class="col col-2">Cron</div>
+      <div class="col col-3">Hook</div>
+      <div class="col col-4">Active</div>
+      <div class="col col-5">#</div>
+    </li>
+    <li *ngFor="let row of schedules" class="table-row">
+      <div (click)="openSchedule(row.id)" class="col col-1 cursor-hand" data-label="Job Id">{{row.id}}</div>
+      <div class="col col-2" data-label="Customer Name">{{row.cron}}</div>
+      <div class="col col-3" data-label="Amount">{{row.hook}}</div>
+      <div class="col col-4" data-label="Payment Status">{{row.active}}</div>
+      <div class="col col-5" data-label="Payment Status"></div>
+    </li>
+  </ul>
+</div>

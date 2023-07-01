@@ -1,0 +1,47 @@
+<div class="centerlize">
+  <table>
+    <tr>
+      <th>Id</th>
+      <td>{{schedule.id}}</td>
+      <th>Hook</th>
+      <td>{{schedule.hook}}</td>
+    </tr>
+    <tr>
+      <th>Cron</th>
+      <td>{{schedule.cron}}</td>
+      <th>Data</th>
+      <td>{{schedule.data}}</td>
+    </tr>
+    <tr>
+      <th>Active</th>
+      <td>{{schedule.active}}</td>
+      <th>Till</th>
+      <td>{{schedule.till}}</td>
+    </tr>
+    <tr>
+      <th>Created At</th>
+      <td>{{schedule.created_at}}</td>
+      <th>Last Modified</th>
+      <td>{{schedule.last_modified}}</td>
+    </tr>
+  </table>
+</div>
+
+<div class="container">
+  <ul class="responsive-table">
+    <li class="table-header">
+      <div class="col col-1">Id</div>
+      <div class="col col-2">Details</div>
+      <div class="col col-3">Manual</div>
+      <div class="col col-4">Scheduled At</div>
+      <div class="col col-5">Started At</div>
+    </li>
+    <li *ngFor="let row of history" class="table-row" [ngClass]="row.status == 'success' ? 'success' : 'failed'" [class.rsuccess]="isAcceptable(row.scheduled_at, row.started_at)" [class.rfailed]="!isAcceptable(row.scheduled_at, row.started_at)">
+      <div class="col col-1 cursor-hand" data-label="Occurence Id">{{row.occurence_id}}</div>
+      <div class="col col-2" data-label="Details">{{row.details}}</div>
+      <div class="col col-3" data-label="Is Manual">{{row.manual}}</div>
+      <div class="col col-4" data-label="Scheduled At">{{row.scheduled_at}}</div>
+      <div class="col col-5" data-label="Started At">{{row.started_at}}</div>
+    </li>
+  </ul>
+</div>
