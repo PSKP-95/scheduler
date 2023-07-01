@@ -262,3 +262,24 @@ func (server *Server) triggerSchedule(ctx *fiber.Ctx) error {
 	server.executor.Submit(message)
 	return nil
 }
+
+func (server *Server) lisSchedule(ctx *fiber.Ctx) error {
+	page := int32(ctx.QueryInt("page", 1))
+	size := int32(ctx.QueryInt("size", 10))
+
+	listScheduleParams := db.ListSchedulesParams{
+		Owner:  "",
+		Limit:  size,
+		Offset: size * (page - 1),
+	}
+	schedules, err := server.store.ListSchedules(ctx.Context(), listScheduleParams)
+
+	if err != nil {
+		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
+		return nil
+	}
+
+	ctx.Status(http.StatusOK).JSON(schedules)
+
+	return nil
+}
