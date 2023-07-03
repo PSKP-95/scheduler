@@ -8,7 +8,8 @@ import {map} from 'rxjs/operators';
   providedIn: 'root'
 })
 export class SchedulesService {
-  private scheduleUrl = "/api/schedules"
+  private scheduleUrl = "/api/schedules";
+  private triggerScheduleUrl = "/api/schedule/"
   schedules: Schedule[];
 
   constructor(private http: HttpClient) { }
@@ -18,5 +19,12 @@ export class SchedulesService {
       .pipe(
         map(value => this.schedules = value)
       );
+  }
+
+  triggerSchedule(id: string) {
+    return this.http.get<any>(`${this.triggerScheduleUrl}/${id}/trigger`)
+      .pipe(
+        map(value => console.log(value))
+      )
   }
 }

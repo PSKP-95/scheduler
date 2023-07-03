@@ -46,4 +46,12 @@ export class SchedulesComponent {
     this.paginationState.pageSize = event.pageSize;
     this.loadSchedules();
   }
+
+  trigger(id: string) {
+    this.schedulesService.triggerSchedule(id).subscribe(
+      data => {
+        console.log(data);
+      }
+    )
+  }
 }

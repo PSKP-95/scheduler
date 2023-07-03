@@ -13,11 +13,28 @@
       <div class="col col-5">#</div>
     </li>
     <li *ngFor="let row of schedules" class="table-row">
-      <div (click)="openSchedule(row.id)" class="col col-1 cursor-hand" data-label="Job Id">{{row.id}}</div>
-      <div class="col col-2" data-label="Customer Name">{{row.cron}}</div>
-      <div class="col col-3" data-label="Amount">{{row.hook}}</div>
-      <div class="col col-4" data-label="Payment Status">{{row.active}}</div>
-      <div class="col col-5" data-label="Payment Status"></div>
+      <div (click)="openSchedule(row.id)" class="col col-1 cursor-hand" data-label="schedule id">{{row.id}}</div>
+      <div class="col col-2" data-label="cron expr">{{row.cron}}</div>
+      <div class="col col-3" data-label="hook">{{row.hook}}</div>
+      <div class="col col-4" data-label="is active">
+        <mat-icon *ngIf="row.active" [ngStyle]="{'color':'green'}">check_circle</mat-icon>
+        <mat-icon *ngIf="!row.active" [ngStyle]="{'color':'red'}">cancel</mat-icon></div>
+      <div class="col col-5" data-label="actions">
+        <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="schedule manu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="trigger(row.id)">
+            <span>Trigger</span>
+          </button>
+          <button *ngIf="row.active" mat-menu-item>
+            <span>Disable</span>
+          </button>
+          <button *ngIf="!row.active" mat-menu-item>
+            <span>Enable</span>
+          </button>
+        </mat-menu>
+      </div>
     </li>
   </ul>
   <mat-paginator (page)="paginationChanged($event)" [length]="paginationState.length" [pageSizeOptions]="[10, 20, 30]" aria-label="Select page">
