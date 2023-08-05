@@ -13,21 +13,32 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatSelectModule } from '@angular/material/select';
+import { NewScheduleComponent } from './components/new-schedule/new-schedule.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     SchedulesComponent,
-    ScheduleComponent
+    ScheduleComponent,
+    NewScheduleComponent
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
     AppRoutingModule,
     MatToolbarModule,
+    MatInputModule,
     MatButtonModule,
+    FormsModule,
+    MatSelectModule,
+    ReactiveFormsModule,
     MatPaginatorModule,
     MatIconModule,
+    MatDialogModule,
     MatTableModule,
     MatMenuModule,
     BrowserAnimationsModule

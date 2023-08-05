@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { Page, Schedule } from 'src/app/models/schedule.model';
 import { SchedulesService } from 'src/app/services/schedules.service';
+import { MatDialog } from '@angular/material/dialog';
+import { NewScheduleComponent } from '../new-schedule/new-schedule.component';
 
 @Component({
   selector: 'app-schedules',
@@ -18,7 +20,7 @@ export class SchedulesComponent {
     previousPageIndex: 0,
   };
 
-  constructor(private schedulesService: SchedulesService, private router: Router) { }
+  constructor(private schedulesService: SchedulesService, private router: Router, public dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.loadSchedules();
@@ -53,5 +55,13 @@ export class SchedulesComponent {
         console.log(data);
       }
     )
+  }
+
+  openDialog() {
+    const dialogRef = this.dialog.open(NewScheduleComponent);
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log(`Dialog result: ${result}`);
+    });
   }
 }

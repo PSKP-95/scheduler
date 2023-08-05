@@ -1,5 +1,13 @@
 import { ScheduleStatus } from "../enums/schedule-status";
 
+export class NewSchedule {
+  cron: string = '* * * * *';
+  hook: string = "";
+  active: boolean = true;
+  till!: Date;
+  data: string = '';
+}
+
 export class Schedule {
   id: string = '00000000-0000-0000-0000-000000000000';
   cron: string = '* * * * *';

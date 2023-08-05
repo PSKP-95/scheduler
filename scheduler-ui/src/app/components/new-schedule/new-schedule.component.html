@@ -1,0 +1,34 @@
+<h2 mat-dialog-title>Create New Schedule</h2>
+<mat-dialog-content class="mat-typography">
+  <form [formGroup]="schedule" class="schedule-form">
+    <mat-form-field class="cron">
+      <mat-label>Cron</mat-label>
+      <input type="text" matInput formControlName="cron">
+    </mat-form-field><br>
+    <mat-form-field class="till">
+      <mat-label>Till</mat-label>
+      <input type="text" placeholder="2023-08-08T16:37:50Z" matInput formControlName="till">
+    </mat-form-field><br>
+    <mat-form-field class="hook">
+      <mat-label>Hook</mat-label>
+      <mat-select formControlName="hook">
+        <mat-option *ngFor="let hook of hooks" value="{{hook}}">{{hook}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Enabled</mat-label>
+      <mat-select formControlName="active">
+        <mat-option [value]="true">true</mat-option>
+        <mat-option [value]="false">false</mat-option>
+      </mat-select>
+    </mat-form-field><br>
+    <mat-form-field class="data">
+      <mat-label>Data</mat-label>
+      <textarea matInput formControlName="data"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-button (click)="createSchedule()" cdkFocusInitial>Ok</button>
+</mat-dialog-actions>

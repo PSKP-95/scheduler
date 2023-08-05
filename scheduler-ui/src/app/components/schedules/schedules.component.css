@@ -19,12 +19,13 @@ h2 {
 }
 
 .table-ops {
-
+  background-color: rgb(246, 246, 246);
+  border: 1px solid rgb(222, 222, 222);
 }
 
 .responsive-table li {
   border-radius: 3px;
-  padding: 25px 30px;
+  padding: 15px 30px;
   display: flex;
   justify-content: space-between;
   margin-bottom: 25px;
@@ -56,6 +57,10 @@ h2 {
 
 .responsive-table .col-5 {
   flex-basis: 5%;
+}
+
+.responsive-table .col {
+  margin: auto;
 }
 
 @media all and (max-width: 767px) {

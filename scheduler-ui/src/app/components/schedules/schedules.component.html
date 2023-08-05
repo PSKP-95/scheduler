@@ -3,7 +3,7 @@
 
   <ul class="responsive-table">
     <li class="table-ops">
-
+      <div><button mat-raised-button color="primary" (click)="openDialog()">New Schedule</button></div>
     </li>
     <li class="table-header">
       <div class="col col-1">Id</div>
@@ -17,8 +17,8 @@
       <div class="col col-2" data-label="cron expr">{{row.cron}}</div>
       <div class="col col-3" data-label="hook">{{row.hook}}</div>
       <div class="col col-4" data-label="is active">
-        <mat-icon *ngIf="row.active" [ngStyle]="{'color':'green'}">check_circle</mat-icon>
-        <mat-icon *ngIf="!row.active" [ngStyle]="{'color':'red'}">cancel</mat-icon></div>
+        <mat-icon title="enabled" *ngIf="row.active" [ngStyle]="{'color':'green'}">check_circle</mat-icon>
+        <mat-icon title="disabled" *ngIf="!row.active" [ngStyle]="{'color':'red'}">cancel</mat-icon></div>
       <div class="col col-5" data-label="actions">
         <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="schedule manu">
           <mat-icon>more_vert</mat-icon>

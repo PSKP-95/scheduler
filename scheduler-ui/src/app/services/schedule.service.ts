@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { History, Schedule, ScheduleHistoryResponse } from '../models/schedule.model';
+import { History, NewSchedule, Schedule, ScheduleHistoryResponse } from '../models/schedule.model';
 import { Observable } from 'rxjs';
 import {map} from 'rxjs/operators';
 
@@ -23,5 +23,10 @@ export class ScheduleService {
 
   loadHistory(id: string, size: number, page: number): Observable<ScheduleHistoryResponse> {
     return this.http.get<any>(`${this.scheduleHistoryUrl}/${id}/history?page=${page}&size=${size}`)
+  }
+
+  createSchedule(schedule: any): Observable<Schedule> {
+    const options = {headers: {'Content-Type': 'application/json'}};
+    return this.http.post<any>(`${this.scheduleUrl}`, JSON.stringify(schedule), options);
   }
 }
