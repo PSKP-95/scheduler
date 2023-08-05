@@ -48,6 +48,10 @@ func (ex *Executor) Execute() {
 			if err != nil {
 				ex.Logger.ErrorLog.Println(err)
 			}
+			if !schedule.Active {
+				_ = ex.store.DeleteOccurence(context.Background(), msg.Occurence.ID)
+				continue
+			}
 			msg.Schedule = schedule
 
 			err = ex.store.UpdateHistoryAndOccurence(context.Background(), msg.Schedule, msg.Occurence)

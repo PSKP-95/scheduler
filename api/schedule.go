@@ -269,7 +269,7 @@ type ListSchedulesResponse struct {
 	Schedules []db.ListSchedulesRow `json:"schedules"`
 }
 
-func (server *Server) lisSchedule(ctx *fiber.Ctx) error {
+func (server *Server) listSchedules(ctx *fiber.Ctx) error {
 	page := int32(ctx.QueryInt("page", 1))
 	size := int32(ctx.QueryInt("size", 10))
 

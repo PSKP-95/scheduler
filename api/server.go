@@ -49,7 +49,7 @@ func (server *Server) setupRouter() {
 
 	// add routes to router
 	api.Post("/schedule", server.createSchedule)
-	api.Get("/schedules", server.lisSchedule)
+	api.Get("/schedules", server.listSchedules)
 	api.Get("/schedule/:id", server.getSchedule)
 	api.Get("/hooks", server.getHooks)
 	api.Delete("/schedule/:id", server.deleteSchedule)
