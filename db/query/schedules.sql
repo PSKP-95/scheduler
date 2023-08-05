@@ -6,9 +6,10 @@ INSERT INTO schedules (
   owner,
   active,
   till,
+  data,
   last_modified
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, now()
+  $1, $2, $3, $4, $5, $6, $7, now()
 ) RETURNING *;
 
 

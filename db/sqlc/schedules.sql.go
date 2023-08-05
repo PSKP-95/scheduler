@@ -20,9 +20,10 @@ INSERT INTO schedules (
   owner,
   active,
   till,
+  data,
   last_modified
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, now()
+  $1, $2, $3, $4, $5, $6, $7, now()
 ) RETURNING id, cron, hook, owner, data, active, till, created_at, last_modified
 `
 
@@ -33,6 +34,7 @@ type CreateScheduleParams struct {
 	Owner  string    `json:"owner"`
 	Active bool      `json:"active"`
 	Till   time.Time `json:"till"`
+	Data   string    `json:"data"`
 }
 
 func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) (Schedule, error) {
@@ -43,6 +45,7 @@ func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) 
 		arg.Owner,
 		arg.Active,
 		arg.Till,
+		arg.Data,
 	)
 	var i Schedule
 	err := row.Scan(

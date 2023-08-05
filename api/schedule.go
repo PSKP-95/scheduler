@@ -20,6 +20,7 @@ type createscheduleRequest struct {
 	Hook   string    `json:"hook" validate:"required"`
 	Owner  string    `json:"owner"`
 	Active bool      `json:"active" validate:"required"`
+	Data   string    `json:"data"`
 	Till   time.Time `json:"till" validate:"required"`
 }
 
@@ -54,6 +55,7 @@ func (server *Server) createSchedule(ctx *fiber.Ctx) error {
 		Owner:  scheduleReq.Owner,
 		Active: scheduleReq.Active,
 		Till:   scheduleReq.Till,
+		Data:   scheduleReq.Data,
 	}
 
 	schedule, err := server.store.CreateSchedule(ctx.Context(), scheduleParams)
