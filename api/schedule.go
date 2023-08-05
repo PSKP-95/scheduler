@@ -12,7 +12,6 @@ import (
 	"github.com/PSKP-95/scheduler/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 )
 
 type createscheduleRequest struct {
@@ -58,31 +57,16 @@ func (server *Server) createSchedule(ctx *fiber.Ctx) error {
 		Data:   scheduleReq.Data,
 	}
 
-	schedule, err := server.store.CreateSchedule(ctx.Context(), scheduleParams)
-
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
-			case "foreign_key_violation", "unique_violation":
-				ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
-				return nil
-			}
-		}
-		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
-		return nil
-	}
-
 	occurenceParams := db.CreateOccurenceParams{
-		Schedule: schedule.ID,
-		Manual:   false,
-		Status:   db.StatusPending,
+		Manual: false,
+		Status: db.StatusPending,
 		Occurence: sql.NullTime{
 			Time:  nextOccurence,
 			Valid: true,
 		},
 	}
 
-	_, err = server.store.CreateOccurence(ctx.Context(), occurenceParams)
+	schedule, err := server.store.CreateScheduleAddNextOccurence(ctx.Context(), scheduleParams, occurenceParams)
 
 	if err != nil {
 		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})

@@ -13,6 +13,7 @@ type Store interface {
 	Querier
 	UpdateHistoryAndOccurence(ctx context.Context, schedule Schedule, occurence NextOccurence) error
 	UpdateHistoryAndDeleteOccurence(ctx context.Context, params UpdateHistoryAndDeleteOccurenceParams) error
+	CreateScheduleAddNextOccurence(ctx context.Context, schedule CreateScheduleParams, occurence CreateOccurenceParams) (Schedule, error)
 }
 
 // store provides all functions to execute db queries and transactions
@@ -44,6 +45,30 @@ func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) erro
 	}
 
 	return tx.Commit()
+}
+
+func (store *SQLStore) CreateScheduleAddNextOccurence(ctx context.Context, scheduleParams CreateScheduleParams, occurenceParams CreateOccurenceParams) (Schedule, error) {
+	var sched Schedule
+	err := store.execTx(ctx, func(q *Queries) error {
+
+		schedule, err := store.CreateSchedule(ctx, scheduleParams)
+		if err != nil {
+			return err
+		}
+
+		occurenceParams.Schedule = schedule.ID
+
+		_, err = store.CreateOccurence(ctx, occurenceParams)
+		if err != nil {
+			return err
+		}
+
+		sched = schedule
+
+		return nil
+	})
+
+	return sched, err
 }
 
 func (store *SQLStore) UpdateHistoryAndOccurence(ctx context.Context, schedule Schedule, occurence NextOccurence) error {
