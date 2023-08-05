@@ -63,4 +63,8 @@ export class ScheduleComponent {
     this.paginationState.pageSize = event.pageSize;
     this.loadHistory();
   }
+
+  localTime(date: Date): string {
+    return new Date(date).toLocaleString();
+  }
 }

@@ -38,13 +38,13 @@
     </li>
     <li *ngFor="let row of history" class="table-row" [ngClass]="row.status == 'success' ? 'success' : 'failed'" [class.rsuccess]="row.manual || isAcceptable(row.scheduled_at, row.started_at)" [class.rfailed]="!row.manual && !isAcceptable(row.scheduled_at, row.started_at)">
       <div class="col col-1 cursor-hand" data-label="Occurence Id">{{row.occurence_id}}</div>
-      <div class="col col-2" data-label="Details">{{row.details}}</div>
+      <div class="col col-2" title="{{row.details}}" data-label="Details">{{row.details}}</div>
       <div class="col col-3" data-label="Is Manual">
         <mat-icon *ngIf="row.manual">check_circle</mat-icon>
         <mat-icon *ngIf="!row.manual">cancel</mat-icon>
       </div>
-      <div class="col col-4" data-label="Scheduled At">{{row.scheduled_at}}</div>
-      <div class="col col-5" data-label="Started At">{{row.started_at}}</div>
+      <div class="col col-4" data-label="Scheduled At">{{localTime(row.scheduled_at)}}</div>
+      <div class="col col-5" data-label="Started At">{{localTime(row.started_at)}}</div>
     </li>
   </ul>
   <mat-paginator (page)="paginationChanged($event)" [length]="paginationState.length" [pageSizeOptions]="[10, 20, 30]" aria-label="Select page">

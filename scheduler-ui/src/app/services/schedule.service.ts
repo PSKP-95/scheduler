@@ -25,8 +25,8 @@ export class ScheduleService {
     return this.http.get<any>(`${this.scheduleHistoryUrl}/${id}/history?page=${page}&size=${size}`)
   }
 
-  createSchedule(schedule: any): Observable<Schedule> {
+  createSchedule(nschedule: any): Observable<Schedule> {
     const options = {headers: {'Content-Type': 'application/json'}};
-    return this.http.post<any>(`${this.scheduleUrl}`, JSON.stringify(schedule), options);
+    return this.http.post<any>(`${this.scheduleUrl}`, JSON.stringify(nschedule), options);
   }
 }

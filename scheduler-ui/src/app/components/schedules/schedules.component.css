@@ -94,4 +94,7 @@ h2 {
 .cursor-hand {
   cursor: pointer;
   color: rgb(9, 9, 97);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
