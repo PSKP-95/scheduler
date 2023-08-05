@@ -30,7 +30,7 @@ type Querier interface {
 	MyExpiredWork(ctx context.Context, worker uuid.NullUUID) ([]NextOccurence, error)
 	ProveLiveliness(ctx context.Context, id uuid.UUID) error
 	RemoveDeadWorkers(ctx context.Context) error
-	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Schedule, error)
+	UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) (Schedule, error)
 	UpdateStatusAndDetails(ctx context.Context, arg UpdateStatusAndDetailsParams) (History, error)
 }
 

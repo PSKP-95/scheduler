@@ -48,7 +48,7 @@ func (ex *Executor) Execute() {
 			if err != nil {
 				ex.Logger.ErrorLog.Println(err)
 			}
-			if !schedule.Active {
+			if !schedule.Active || msg.Occurence.Occurence.Time.After(schedule.Till) {
 				_ = ex.store.DeleteOccurence(context.Background(), msg.Occurence.ID)
 				continue
 			}

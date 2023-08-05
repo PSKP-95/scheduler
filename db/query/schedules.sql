@@ -28,7 +28,7 @@ OFFSET $3;
 DELETE FROM schedules
 WHERE id = $1;
 
--- name: UpdateAccount :one
+-- name: UpdateSchedule :one
 UPDATE schedules 
-SET cron = $2, hook = $3, active = $4, till = $5, last_modified = now()
+SET cron = $2, hook = $3, active = $4, till = $5, data = $6, last_modified = now()
 WHERE id = $1 RETURNING *;

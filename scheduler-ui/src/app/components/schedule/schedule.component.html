@@ -16,13 +16,13 @@
       <th>Active</th>
       <td>{{schedule.active}}</td>
       <th>Till</th>
-      <td>{{schedule.till}}</td>
+      <td>{{localTime(schedule.till)}}</td>
     </tr>
     <tr>
       <th>Created At</th>
-      <td>{{schedule.created_at}}</td>
+      <td>{{localTime(schedule.created_at)}}</td>
       <th>Last Modified</th>
-      <td>{{schedule.last_modified}}</td>
+      <td>{{localTime(schedule.last_modified)}}</td>
     </tr>
   </table>
 </div>

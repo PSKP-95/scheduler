@@ -139,6 +139,7 @@ type updatescheduleRequest struct {
 	Hook   string    `json:"hook"`
 	Active bool      `json:"active"`
 	Till   time.Time `json:"till" validate:"datetime"`
+	Data   string    `json:"data"`
 }
 
 func (server *Server) editSchedule(ctx *fiber.Ctx) error {
@@ -172,15 +173,16 @@ func (server *Server) editSchedule(ctx *fiber.Ctx) error {
 	// 	return err
 	// }
 
-	scheduleParams := db.UpdateAccountParams{
+	scheduleParams := db.UpdateScheduleParams{
 		ID:     suuid,
 		Cron:   scheduleReq.Cron,
 		Hook:   scheduleReq.Hook,
 		Active: scheduleReq.Active,
 		Till:   scheduleReq.Till,
+		Data:   scheduleReq.Data,
 	}
 
-	schedule, err := server.store.UpdateAccount(ctx.Context(), scheduleParams)
+	schedule, err := server.store.UpdateSchedule(ctx.Context(), scheduleParams)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

@@ -155,27 +155,29 @@ func (q *Queries) ListSchedules(ctx context.Context, arg ListSchedulesParams) ([
 	return items, nil
 }
 
-const updateAccount = `-- name: UpdateAccount :one
+const updateSchedule = `-- name: UpdateSchedule :one
 UPDATE schedules 
-SET cron = $2, hook = $3, active = $4, till = $5, last_modified = now()
+SET cron = $2, hook = $3, active = $4, till = $5, data = $6, last_modified = now()
 WHERE id = $1 RETURNING id, cron, hook, owner, data, active, till, created_at, last_modified
 `
 
-type UpdateAccountParams struct {
+type UpdateScheduleParams struct {
 	ID     uuid.UUID `json:"id"`
 	Cron   string    `json:"cron"`
 	Hook   string    `json:"hook"`
 	Active bool      `json:"active"`
 	Till   time.Time `json:"till"`
+	Data   string    `json:"data"`
 }
 
-func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Schedule, error) {
-	row := q.db.QueryRowContext(ctx, updateAccount,
+func (q *Queries) UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) (Schedule, error) {
+	row := q.db.QueryRowContext(ctx, updateSchedule,
 		arg.ID,
 		arg.Cron,
 		arg.Hook,
 		arg.Active,
 		arg.Till,
+		arg.Data,
 	)
 	var i Schedule
 	err := row.Scan(
