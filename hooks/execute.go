@@ -57,6 +57,7 @@ func (ex *Executor) Execute() {
 			err = ex.store.UpdateHistoryAndOccurence(context.Background(), msg.Schedule, msg.Occurence)
 			if err != nil {
 				ex.Logger.ErrorLog.Println(err)
+				ex.Logger.ErrorLog.Println(schedule.ID, msg.Occurence.ID)
 			}
 
 			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
