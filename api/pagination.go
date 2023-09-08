@@ -1,4 +1,4 @@
-package util
+package api
 
 type Page struct {
 	Number        int32 `json:"number"`

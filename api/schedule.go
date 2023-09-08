@@ -252,7 +252,7 @@ func (server *Server) triggerSchedule(ctx *fiber.Ctx) error {
 }
 
 type ListSchedulesResponse struct {
-	Page      util.Page             `json:"page"`
+	Page      Page                  `json:"page"`
 	Schedules []db.ListSchedulesRow `json:"schedules"`
 }
 
@@ -274,7 +274,7 @@ func (server *Server) listSchedules(ctx *fiber.Ctx) error {
 
 	schedulesResp := ListSchedulesResponse{
 		Schedules: schedules,
-		Page: util.Page{
+		Page: Page{
 			Number:        page,
 			Size:          size,
 			TotalPages:    int32(math.Ceil(float64(schedules[0].TotalRecords) / float64(size))),
