@@ -2,8 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/PSKP-95/scheduler/api"
 	"github.com/PSKP-95/scheduler/config"
@@ -64,8 +67,22 @@ func main() {
 	// start executor
 	go executor.Execute()
 
-	err = server.Start(serverConfig.ServerAddress)
-	if err != nil {
-		errorLog.Fatal("Cannot start server: ", err)
-	}
+	go func() {
+		err = server.Start(serverConfig.ServerAddress)
+		if err != nil {
+			errorLog.Fatal("Cannot start server: ", err)
+		}
+	}()
+
+	// graceful shutdown of webserver and db connection.
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	<-c
+	fmt.Println("Running cleanup tasks.")
+
+	_ = server.Shutdown()
+	_ = store.Close()
+
+	fmt.Println("Graceful shutdown done.")
 }

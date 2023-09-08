@@ -66,3 +66,7 @@ func (server *Server) setupRouter() {
 func (server *Server) Start(address string) error {
 	return server.app.Listen(address)
 }
+
+func (s *Server) Shutdown() error {
+	return s.app.Shutdown()
+}
