@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/PSKP-95/scheduler/config"
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
@@ -68,5 +70,6 @@ func (server *Server) Start(address string) error {
 }
 
 func (s *Server) Shutdown() error {
+	fmt.Println("Graceful shutdown of server.")
 	return s.app.Shutdown()
 }

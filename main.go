@@ -37,6 +37,7 @@ func main() {
 	}
 
 	executorChan := make(chan hooks.Message)
+	workerKillSwitch := make(chan struct{})
 
 	store := db.NewStore(conn)
 
@@ -45,7 +46,7 @@ func main() {
 		errorLog.Fatal("something wrong while creating executor: ", err)
 	}
 
-	worker, err := worker.NewWorker(workerConfig, store, executor, logger)
+	worker, err := worker.NewWorker(workerConfig, store, executor, logger, workerKillSwitch)
 	if err != nil {
 		errorLog.Fatal("something wrong while creating worker: ", err)
 	}
@@ -81,7 +82,16 @@ func main() {
 	<-c
 	fmt.Println("Running cleanup tasks.")
 
+	// close server so no new requests allowed
 	_ = server.Shutdown()
+
+	// stop worker
+	workerKillSwitch <- struct{}{}
+	<-workerKillSwitch
+
+	// stop executor. How?
+
+	// close db
 	_ = store.Close()
 
 	fmt.Println("Graceful shutdown done.")

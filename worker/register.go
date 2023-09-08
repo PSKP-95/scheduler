@@ -11,20 +11,22 @@ import (
 )
 
 type Worker struct {
-	id       uuid.UUID
-	config   config.WorkerConfig
-	store    db.Store
-	executor *hooks.Executor
-	Logger   *mlog.Log
+	id         uuid.UUID
+	config     config.WorkerConfig
+	store      db.Store
+	executor   *hooks.Executor
+	Logger     *mlog.Log
+	killSwitch chan struct{}
 }
 
-func NewWorker(config config.WorkerConfig, store db.Store, executor *hooks.Executor, logger *mlog.Log) (*Worker, error) {
+func NewWorker(config config.WorkerConfig, store db.Store, executor *hooks.Executor, logger *mlog.Log, killSwitch chan struct{}) (*Worker, error) {
 	worker := &Worker{
-		id:       uuid.New(),
-		config:   config,
-		store:    store,
-		executor: executor,
-		Logger:   logger,
+		id:         uuid.New(),
+		config:     config,
+		store:      store,
+		executor:   executor,
+		Logger:     logger,
+		killSwitch: killSwitch,
 	}
 
 	return worker, nil

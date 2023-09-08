@@ -31,6 +31,7 @@ func NewStore(db *sql.DB) Store {
 }
 
 func (store *SQLStore) Close() error {
+	fmt.Println("Graceful shutdown of db.")
 	return store.db.Close()
 }
 

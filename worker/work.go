@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	db "github.com/PSKP-95/scheduler/db/sqlc"
@@ -15,6 +16,7 @@ func (worker *Worker) Work() {
 
 	alarmTicker := time.NewTicker(15 * time.Second)
 
+loop:
 	for {
 		select {
 		case <-periodicTicker.C:
@@ -27,8 +29,18 @@ func (worker *Worker) Work() {
 		case <-alarmTicker.C:
 			alarmTicker.Stop()
 			worker.poll(alarmTicker)
+
+		case <-worker.killSwitch:
+			// perform suicide
+			err := worker.store.DeleteWorker(context.Background(), worker.id)
+			if err != nil {
+				worker.Logger.ErrorLog.Println("Failed to perform suicide. exiting without suicide.")
+			}
+			break loop
 		}
 	}
+	fmt.Println("Graceful shutdown of worker.")
+	worker.killSwitch <- struct{}{}
 }
 
 func (worker *Worker) getNewWork() {
