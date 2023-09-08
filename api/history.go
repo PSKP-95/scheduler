@@ -20,6 +20,7 @@ func (server *Server) getScheduleHistory(ctx *fiber.Ctx) error {
 	if id == "" {
 		ctx.Status(http.StatusBadRequest).JSON(
 			&fiber.Map{"message": "provide parameter id"})
+
 		return nil
 	}
 
@@ -34,6 +35,7 @@ func (server *Server) getScheduleHistory(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
+
 		return err
 	}
 

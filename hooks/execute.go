@@ -48,10 +48,12 @@ func (ex *Executor) Execute() {
 			if err != nil {
 				ex.Logger.ErrorLog.Println(err)
 			}
+
 			if !schedule.Active || msg.Occurence.Occurence.Time.After(schedule.Till) {
 				_ = ex.store.DeleteOccurence(context.Background(), msg.Occurence.ID)
 				continue
 			}
+
 			msg.Schedule = schedule
 
 			err = ex.store.UpdateHistoryAndOccurence(context.Background(), msg.Schedule, msg.Occurence)
@@ -68,6 +70,7 @@ func (ex *Executor) Execute() {
 				Details:   msg.Details,
 				Status:    db.StatusSuccess,
 			}
+
 			err := ex.store.UpdateHistoryAndDeleteOccurence(context.Background(), params)
 			if err != nil {
 				ex.Logger.ErrorLog.Println(err)
@@ -79,6 +82,7 @@ func (ex *Executor) Execute() {
 				Details:   msg.Details,
 				Status:    db.StatusFailure,
 			}
+
 			err := ex.store.UpdateHistoryAndDeleteOccurence(context.Background(), params)
 			if err != nil {
 				ex.Logger.ErrorLog.Println(err)
@@ -92,8 +96,10 @@ func (ex *Executor) createHistoryForOccurence(msg *Message) {
 	if err != nil {
 		ex.Logger.ErrorLog.Fatalln(err)
 	}
+
 	msg.Schedule = schedule
 	historyParam := getHistoryParam(schedule, msg.Occurence)
+
 	_, err = ex.store.CreateHistory(context.Background(), historyParam)
 	if err != nil {
 		ex.Logger.ErrorLog.Println(err)

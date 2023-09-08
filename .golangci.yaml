@@ -1,0 +1,21 @@
+run:
+  timeout: 5m
+  skip-dirs:
+    - "docs/"
+    - "scheduler-ui"
+
+linters:
+  enable-all: true
+  disable:
+    - gci
+    - maligned
+    - nosnakecase
+    - scopelint
+    - structcheck
+    - varcheck
+    - interfacer
+    - ifshort
+    - golint
+    - exhaustivestruct
+    - deadcode
+    - depguard

@@ -30,21 +30,20 @@ func (server *Server) createSchedule(ctx *fiber.Ctx) error {
 	if err != nil {
 		ctx.Status(http.StatusUnprocessableEntity).JSON(
 			&fiber.Map{"message": "request failed. " + err.Error()})
-		return nil
+		return err
 	}
 
 	err = server.validate.Struct(scheduleReq)
-
 	if err != nil {
 		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
-		return nil
+		return err
 	}
 
 	// validate cron expression
 	nextOccurence, err := util.CalculateNextOccurence(scheduleReq.Cron)
 	if err != nil {
 		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
-		return nil
+		return err
 	}
 
 	scheduleParams := db.CreateScheduleParams{
@@ -67,13 +66,13 @@ func (server *Server) createSchedule(ctx *fiber.Ctx) error {
 	}
 
 	schedule, err := server.store.CreateScheduleAddNextOccurence(ctx.Context(), scheduleParams, occurenceParams)
-
 	if err != nil {
 		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
-		return nil
+		return err
 	}
 
 	ctx.Status(http.StatusCreated).JSON(schedule)
+
 	return nil
 }
 

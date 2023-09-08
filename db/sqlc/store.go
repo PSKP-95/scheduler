@@ -16,7 +16,7 @@ type Store interface {
 	CreateScheduleAddNextOccurence(ctx context.Context, schedule CreateScheduleParams, occurence CreateOccurenceParams) (Schedule, error)
 }
 
-// store provides all functions to execute db queries and transactions
+// store provides all functions to execute db queries and transactions.
 type SQLStore struct {
 	*Queries
 	db *sql.DB
@@ -37,10 +37,12 @@ func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) erro
 
 	q := New(tx)
 	err = fn(q)
+
 	if err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {
 			return fmt.Errorf("tx err: %v, rb er: %v", err, rbErr)
 		}
+
 		return err
 	}
 
@@ -49,8 +51,8 @@ func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) erro
 
 func (store *SQLStore) CreateScheduleAddNextOccurence(ctx context.Context, scheduleParams CreateScheduleParams, occurenceParams CreateOccurenceParams) (Schedule, error) {
 	var sched Schedule
-	err := store.execTx(ctx, func(q *Queries) error {
 
+	err := store.execTx(ctx, func(q *Queries) error {
 		schedule, err := store.CreateSchedule(ctx, scheduleParams)
 		if err != nil {
 			return err
@@ -95,10 +97,10 @@ func (store *SQLStore) UpdateHistoryAndOccurence(ctx context.Context, schedule S
 		}
 
 		_, err = store.CreateOccurence(context.Background(), occurenceParams)
-
 		if err != nil {
 			return err
 		}
+
 		return nil
 	})
 
@@ -133,6 +135,7 @@ func (store *SQLStore) UpdateHistoryAndDeleteOccurence(ctx context.Context, para
 
 		return nil
 	})
+
 	return err
 }
 

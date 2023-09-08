@@ -23,7 +23,6 @@ func main() {
 	}
 
 	conn, err := sql.Open(config.DBDriver, config.DBSource)
-
 	if err != nil {
 		errorLog.Fatal("Cannot connect to db: ", err)
 	}
@@ -36,27 +35,24 @@ func main() {
 	executorChan := make(chan hooks.Message)
 
 	store := db.NewStore(conn)
-	executor, err := hooks.NewExecutor(config, store, executorChan, logger)
 
+	executor, err := hooks.NewExecutor(config, store, executorChan, logger)
 	if err != nil {
 		errorLog.Fatal("something wrong while creating executor: ", err)
 	}
 
 	worker, err := worker.NewWorker(config, store, executor, logger)
-
 	if err != nil {
 		errorLog.Fatal("something wrong while creating worker: ", err)
 	}
 
 	server, err := api.NewServer(config, store, executor, worker, logger)
-
 	if err != nil {
 		errorLog.Fatal("something wrong while creating new server: ", err)
 	}
 
 	// register worker
 	err = worker.Register()
-
 	if err != nil {
 		errorLog.Fatal("Error while registering worker: ", err)
 	}
