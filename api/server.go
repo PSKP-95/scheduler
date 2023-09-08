@@ -4,7 +4,7 @@ import (
 	"github.com/PSKP-95/scheduler/config"
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
-	"github.com/PSKP-95/scheduler/util"
+	"github.com/PSKP-95/scheduler/mlog"
 	"github.com/PSKP-95/scheduler/worker"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -19,10 +19,10 @@ type Server struct {
 	validate *validator.Validate
 	executor *hooks.Executor
 	worker   *worker.Worker
-	Logger   *util.Log
+	Logger   *mlog.Log
 }
 
-func NewServer(config config.ServerConfig, store db.Store, executor *hooks.Executor, worker *worker.Worker, logger *util.Log) (*Server, error) {
+func NewServer(config config.ServerConfig, store db.Store, executor *hooks.Executor, worker *worker.Worker, logger *mlog.Log) (*Server, error) {
 	server := &Server{
 		config:   config,
 		store:    store,

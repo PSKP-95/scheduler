@@ -5,17 +5,17 @@ import (
 	"time"
 
 	db "github.com/PSKP-95/scheduler/db/sqlc"
-	"github.com/PSKP-95/scheduler/util"
+	"github.com/PSKP-95/scheduler/mlog"
 )
 
 type Executor struct {
 	store  db.Store
 	hooks  map[string]Hook
 	exChan chan Message
-	Logger *util.Log
+	Logger *mlog.Log
 }
 
-func NewExecutor(store db.Store, exChan chan Message, logger *util.Log) (*Executor, error) {
+func NewExecutor(store db.Store, exChan chan Message, logger *mlog.Log) (*Executor, error) {
 	ex := &Executor{
 		store:  store,
 		hooks:  getHooks(),

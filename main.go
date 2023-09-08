@@ -9,7 +9,7 @@ import (
 	"github.com/PSKP-95/scheduler/config"
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
-	"github.com/PSKP-95/scheduler/util"
+	"github.com/PSKP-95/scheduler/mlog"
 	"github.com/PSKP-95/scheduler/worker"
 	_ "github.com/lib/pq"
 )
@@ -28,7 +28,7 @@ func main() {
 		errorLog.Fatal("Cannot connect to db: ", err)
 	}
 
-	logger := &util.Log{
+	logger := &mlog.Log{
 		InfoLog:  infoLog,
 		ErrorLog: errorLog,
 	}
