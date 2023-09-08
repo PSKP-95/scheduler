@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/PSKP-95/scheduler/cron"
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
-	"github.com/PSKP-95/scheduler/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -40,7 +40,7 @@ func (server *Server) createSchedule(ctx *fiber.Ctx) error {
 	}
 
 	// validate cron expression
-	nextOccurence, err := util.CalculateNextOccurence(scheduleReq.Cron)
+	nextOccurence, err := cron.CalculateNextOccurence(scheduleReq.Cron)
 	if err != nil {
 		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
 		return err

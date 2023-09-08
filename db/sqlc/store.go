@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PSKP-95/scheduler/util"
+	"github.com/PSKP-95/scheduler/cron"
 )
 
 type Store interface {
@@ -81,7 +81,7 @@ func (store *SQLStore) UpdateHistoryAndOccurence(ctx context.Context, schedule S
 			return err
 		}
 
-		nextOccurence, err := util.CalculateNextOccurence(schedule.Cron)
+		nextOccurence, err := cron.CalculateNextOccurence(schedule.Cron)
 		if err != nil {
 			return err
 		}
