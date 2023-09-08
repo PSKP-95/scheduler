@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/PSKP-95/scheduler/config"
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
 	"github.com/PSKP-95/scheduler/util"
@@ -12,7 +13,7 @@ import (
 )
 
 type Server struct {
-	config   util.Config
+	config   config.ServerConfig
 	store    db.Store
 	app      *fiber.App
 	validate *validator.Validate
@@ -21,7 +22,7 @@ type Server struct {
 	Logger   *util.Log
 }
 
-func NewServer(config util.Config, store db.Store, executor *hooks.Executor, worker *worker.Worker, logger *util.Log) (*Server, error) {
+func NewServer(config config.ServerConfig, store db.Store, executor *hooks.Executor, worker *worker.Worker, logger *util.Log) (*Server, error) {
 	server := &Server{
 		config:   config,
 		store:    store,
@@ -65,7 +66,3 @@ func (server *Server) setupRouter() {
 func (server *Server) Start(address string) error {
 	return server.app.Listen(address)
 }
-
-// func errorResponse(err error) gin.H {
-// 	return gin.H{"error": err.Error()}
-// }

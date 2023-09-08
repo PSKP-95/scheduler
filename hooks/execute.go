@@ -9,16 +9,14 @@ import (
 )
 
 type Executor struct {
-	config util.Config
 	store  db.Store
 	hooks  map[string]Hook
 	exChan chan Message
 	Logger *util.Log
 }
 
-func NewExecutor(config util.Config, store db.Store, exChan chan Message, logger *util.Log) (*Executor, error) {
+func NewExecutor(store db.Store, exChan chan Message, logger *util.Log) (*Executor, error) {
 	ex := &Executor{
-		config: config,
 		store:  store,
 		hooks:  getHooks(),
 		exChan: exChan,

@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 
+	"github.com/PSKP-95/scheduler/config"
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
 	"github.com/PSKP-95/scheduler/util"
@@ -11,13 +12,13 @@ import (
 
 type Worker struct {
 	id       uuid.UUID
-	config   util.Config
+	config   config.WorkerConfig
 	store    db.Store
 	executor *hooks.Executor
 	Logger   *util.Log
 }
 
-func NewWorker(config util.Config, store db.Store, executor *hooks.Executor, logger *util.Log) (*Worker, error) {
+func NewWorker(config config.WorkerConfig, store db.Store, executor *hooks.Executor, logger *util.Log) (*Worker, error) {
 	worker := &Worker{
 		id:       uuid.New(),
 		config:   config,
