@@ -1,0 +1,10 @@
+scheduler-ui/**
+docs/**
+Dockerfile
+dbdiagram.dbml
+Makefile
+README.md
+sqlc.yaml
+.vscode/**
+.gitignore
+.golangci.yaml
