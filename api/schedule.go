@@ -28,22 +28,19 @@ func (server *Server) createSchedule(ctx *fiber.Ctx) error {
 
 	err := ctx.BodyParser(&scheduleReq)
 	if err != nil {
-		ctx.Status(http.StatusUnprocessableEntity).JSON(
+		return ctx.Status(http.StatusUnprocessableEntity).JSON(
 			&fiber.Map{"message": "request failed. " + err.Error()})
-		return err
 	}
 
 	err = server.validate.Struct(scheduleReq)
 	if err != nil {
-		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
-		return err
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
 	}
 
 	// validate cron expression
 	nextOccurence, err := cron.CalculateNextOccurence(scheduleReq.Cron)
 	if err != nil {
-		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
-		return err
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
 	}
 
 	scheduleParams := db.CreateScheduleParams{
@@ -67,70 +64,54 @@ func (server *Server) createSchedule(ctx *fiber.Ctx) error {
 
 	schedule, err := server.store.CreateScheduleAddNextOccurence(ctx.Context(), scheduleParams, occurenceParams)
 	if err != nil {
-		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
-		return err
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
 	}
 
-	ctx.Status(http.StatusCreated).JSON(schedule)
-
-	return nil
+	return ctx.Status(http.StatusCreated).JSON(schedule)
 }
 
 func (server *Server) getSchedule(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	if id == "" {
-		ctx.Status(http.StatusBadRequest).JSON(
+		return ctx.Status(http.StatusBadRequest).JSON(
 			&fiber.Map{"message": "provide parameter id"})
-		return nil
 	}
 
 	suuid, err := uuid.Parse(id)
-
 	if err != nil {
-		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": fmt.Sprintf("invalid uuid %s. %s", id, err.Error())})
-		return nil
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": fmt.Sprintf("invalid uuid %s. %s", id, err.Error())})
 	}
 
 	schedule, err := server.store.GetSchedule(ctx.Context(), suuid)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.Status(http.StatusNotFound).JSON(&fiber.Map{"message": fmt.Sprintf("schedule with id %s not found. %s", id, err.Error())})
-			return nil
+			return ctx.Status(http.StatusNotFound).JSON(&fiber.Map{"message": fmt.Sprintf("schedule with id %s not found. %s", id, err.Error())})
 		}
 
-		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
-		return nil
+		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
 	}
 
-	ctx.Status(http.StatusOK).JSON(schedule)
-
-	return nil
+	return ctx.Status(http.StatusOK).JSON(schedule)
 }
 
 func (server *Server) deleteSchedule(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	if id == "" {
-		ctx.Status(http.StatusBadRequest).JSON(
+		return ctx.Status(http.StatusBadRequest).JSON(
 			&fiber.Map{"message": "provide parameter id"})
-		return nil
 	}
 
 	suuid, err := uuid.Parse(id)
-
 	if err != nil {
-		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": fmt.Sprintf("invalid uuid %s. %s", id, err.Error())})
-		return nil
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": fmt.Sprintf("invalid uuid %s. %s", id, err.Error())})
 	}
 
 	err = server.store.DeleteSchedule(ctx.Context(), suuid)
-
 	if err != nil {
-		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
-		return nil
+		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
 	}
 
-	return nil
+	return ctx.SendStatus(http.StatusNoContent)
 }
 
 type updatescheduleRequest struct {
@@ -144,25 +125,20 @@ type updatescheduleRequest struct {
 func (server *Server) editSchedule(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	if id == "" {
-		ctx.Status(http.StatusBadRequest).JSON(
+		return ctx.Status(http.StatusBadRequest).JSON(
 			&fiber.Map{"message": "provide parameter id"})
-		return nil
 	}
 
 	suuid, err := uuid.Parse(id)
-
 	if err != nil {
-		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": fmt.Sprintf("invalid uuid %s. %s", id, err.Error())})
-		return nil
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": fmt.Sprintf("invalid uuid %s. %s", id, err.Error())})
 	}
 
 	scheduleReq := updatescheduleRequest{}
 
-	err = ctx.BodyParser(&scheduleReq)
-	if err != nil {
-		ctx.Status(http.StatusUnprocessableEntity).JSON(
+	if err = ctx.BodyParser(&scheduleReq); err != nil {
+		return ctx.Status(http.StatusUnprocessableEntity).JSON(
 			&fiber.Map{"message": "request failed. " + err.Error()})
-		return err
 	}
 
 	// err = server.validate.Struct(scheduleReq)
@@ -182,47 +158,36 @@ func (server *Server) editSchedule(ctx *fiber.Ctx) error {
 	}
 
 	schedule, err := server.store.UpdateSchedule(ctx.Context(), scheduleParams)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.Status(http.StatusNotFound).JSON(&fiber.Map{"message": fmt.Sprintf("schedule with id %s not found. %s", id, err.Error())})
-			return nil
+			return ctx.Status(http.StatusNotFound).JSON(&fiber.Map{"message": fmt.Sprintf("schedule with id %s not found. %s", id, err.Error())})
 		}
 
-		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
-		return nil
+		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
 	}
 
-	ctx.Status(http.StatusOK).JSON(schedule)
-
-	return nil
+	return ctx.Status(http.StatusOK).JSON(schedule)
 }
 
 func (server *Server) triggerSchedule(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	if id == "" {
-		ctx.Status(http.StatusBadRequest).JSON(
+		return ctx.Status(http.StatusBadRequest).JSON(
 			&fiber.Map{"message": "provide parameter id"})
-		return nil
 	}
 
 	suuid, err := uuid.Parse(id)
-
 	if err != nil {
-		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": fmt.Sprintf("invalid uuid %s. %s", id, err.Error())})
-		return nil
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": fmt.Sprintf("invalid uuid %s. %s", id, err.Error())})
 	}
 
 	schedule, err := server.store.GetSchedule(ctx.Context(), suuid)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.Status(http.StatusNotFound).JSON(&fiber.Map{"message": fmt.Sprintf("schedule with id %s not found. %s", id, err.Error())})
-			return nil
+			return ctx.Status(http.StatusNotFound).JSON(&fiber.Map{"message": fmt.Sprintf("schedule with id %s not found. %s", id, err.Error())})
 		}
 
-		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
-		return nil
+		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
 	}
 
 	occurenceParams := db.CreateOccurenceParams{
@@ -236,10 +201,8 @@ func (server *Server) triggerSchedule(ctx *fiber.Ctx) error {
 	}
 
 	occurence, err := server.store.CreateOccurence(ctx.Context(), occurenceParams)
-
 	if err != nil {
-		ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
-		return nil
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": err.Error()})
 	}
 
 	message := hooks.Message{
@@ -265,11 +228,10 @@ func (server *Server) listSchedules(ctx *fiber.Ctx) error {
 		Limit:  size,
 		Offset: size * (page - 1),
 	}
-	schedules, err := server.store.ListSchedules(ctx.Context(), listScheduleParams)
 
+	schedules, err := server.store.ListSchedules(ctx.Context(), listScheduleParams)
 	if err != nil {
-		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
-		return nil
+		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
 	}
 
 	schedulesResp := ListSchedulesResponse{
@@ -282,7 +244,5 @@ func (server *Server) listSchedules(ctx *fiber.Ctx) error {
 		},
 	}
 
-	ctx.Status(http.StatusOK).JSON(schedulesResp)
-
-	return nil
+	return ctx.Status(http.StatusOK).JSON(schedulesResp)
 }

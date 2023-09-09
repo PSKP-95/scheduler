@@ -12,7 +12,5 @@ func (server *Server) getHooks(ctx *fiber.Ctx) error {
 		keys = append(keys, k)
 	}
 
-	ctx.Status(http.StatusOK).JSON(keys)
-
-	return nil
+	return ctx.Status(http.StatusOK).JSON(keys)
 }

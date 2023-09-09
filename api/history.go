@@ -33,9 +33,7 @@ func (server *Server) getScheduleHistory(ctx *fiber.Ctx) error {
 	})
 
 	if err != nil {
-		ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
-
-		return err
+		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
 	}
 
 	scheduleHistoryResponse := ScheduleHistoryResponse{
@@ -48,7 +46,5 @@ func (server *Server) getScheduleHistory(ctx *fiber.Ctx) error {
 		},
 	}
 
-	ctx.Status(http.StatusOK).JSON(scheduleHistoryResponse)
-
-	return nil
+	return ctx.Status(http.StatusOK).JSON(scheduleHistoryResponse)
 }
