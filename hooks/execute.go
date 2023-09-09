@@ -48,6 +48,10 @@ func (ex *Executor) Execute() {
 			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan, ex.Logger)
 		case SCHEDULED:
 			ex.Logger.InfoLog.Println("SCHEDULED: ", msg.Occurence)
+			if msg.Occurence.Status == db.StatusRunning {
+				ex.Logger.ErrorLog.Println("Occurence already running.")
+				continue
+			}
 			schedule, err := ex.store.GetSchedule(context.Background(), msg.Occurence.Schedule)
 			if err != nil {
 				ex.Logger.ErrorLog.Println(err)

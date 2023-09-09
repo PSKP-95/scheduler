@@ -131,7 +131,7 @@ func (q *Queries) GetOccurence(ctx context.Context, id int32) (NextOccurence, er
 
 const myExpiredWork = `-- name: MyExpiredWork :many
 SELECT id, schedule, worker, manual, status, occurence, last_updated FROM next_occurence
-WHERE occurence < CURRENT_TIMESTAMP and worker = $1
+WHERE occurence < CURRENT_TIMESTAMP and worker = $1 and status = 'pending'
 ORDER BY occurence
 `
 

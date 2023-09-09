@@ -25,7 +25,7 @@ WHERE occurence < (CURRENT_TIMESTAMP + $2 * INTERVAL '1 second') and worker IS N
 
 -- name: MyExpiredWork :many
 SELECT * FROM next_occurence
-WHERE occurence < CURRENT_TIMESTAMP and worker = $1
+WHERE occurence < CURRENT_TIMESTAMP and worker = $1 and status = 'pending'
 ORDER BY occurence;
 
 -- name: GetNextImmediateWork :one
