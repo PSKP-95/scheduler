@@ -15,6 +15,7 @@ type ServerConfig struct {
 
 type WorkerConfig struct {
 	WorkLookAheadSec string `mapstructure:"WORK_LOOK_AHEAD_SEC"`
+	WorkPollTimeout  int8   `mapstructure:"WORK_POLL_TIMEOUT_SEC"`
 }
 
 func LoadConfig(path string) (DatabaseConfig, ServerConfig, WorkerConfig, error) {

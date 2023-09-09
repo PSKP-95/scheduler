@@ -11,7 +11,7 @@ import (
 )
 
 func (worker *Worker) Work() {
-	periodicTicker := time.NewTicker(10 * time.Second)
+	periodicTicker := time.NewTicker(time.Duration(worker.config.WorkPollTimeout) * time.Second)
 	defer periodicTicker.Stop()
 
 	alarmTicker := time.NewTicker(15 * time.Second)

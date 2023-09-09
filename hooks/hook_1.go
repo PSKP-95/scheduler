@@ -5,6 +5,8 @@ package hooks
 
 import (
 	"fmt"
+
+	"github.com/PSKP-95/scheduler/mlog"
 )
 
 type MyHook1 struct {
@@ -19,9 +21,9 @@ func (m *MyHook1) GetName() string {
 	return m.Name
 }
 
-func (m *MyHook1) Perform(msg Message, statusChan chan<- Message) {
-	fmt.Println("Performing Hook 1")
-	fmt.Println(msg)
+func (m *MyHook1) Perform(msg Message, statusChan chan<- Message, mlogger *mlog.Log) {
+	mlogger.InfoLog.Println("Performing MyHook1")
+	mlogger.InfoLog.Println(msg)
 	msg.Details = "Done working..."
 	msg.Type = SUCCESS
 	statusChan <- msg

@@ -6,6 +6,8 @@ package hooks
 import (
 	"fmt"
 	"time"
+
+	"github.com/PSKP-95/scheduler/mlog"
 )
 
 type MyHook3 struct {
@@ -20,9 +22,9 @@ func (m *MyHook3) GetName() string {
 	return m.Name
 }
 
-func (m *MyHook3) Perform(msg Message, statusChan chan<- Message) {
-	fmt.Println("Performing Hook 3")
-	fmt.Println(msg)
+func (m *MyHook3) Perform(msg Message, statusChan chan<- Message, mlogger *mlog.Log) {
+	mlogger.InfoLog.Println("Performing Hook 3")
+	mlogger.InfoLog.Println(msg)
 	msg.Details = msg.Schedule.Data
 	msg.Type = SUCCESS
 	time.Sleep(30 * time.Second)

@@ -44,7 +44,7 @@ func (ex *Executor) Execute() {
 		case TRIGGER:
 			ex.createHistoryForOccurence(&msg)
 			ex.wg.Add(1)
-			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
+			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan, ex.Logger)
 		case SCHEDULED:
 			schedule, err := ex.store.GetSchedule(context.Background(), msg.Occurence.Schedule)
 			if err != nil {
@@ -65,7 +65,7 @@ func (ex *Executor) Execute() {
 			}
 
 			ex.wg.Add(1)
-			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
+			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan, ex.Logger)
 		case SUCCESS:
 			params := db.UpdateHistoryAndDeleteOccurenceParams{
 				Schedule:  msg.Schedule,
