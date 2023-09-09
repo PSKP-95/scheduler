@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/PSKP-95/scheduler/api"
@@ -38,10 +39,11 @@ func main() {
 
 	executorChan := make(chan hooks.Message)
 	workerKillSwitch := make(chan struct{})
+	var wg sync.WaitGroup
 
 	store := db.NewStore(conn)
 
-	executor, err := hooks.NewExecutor(store, executorChan, logger)
+	executor, err := hooks.NewExecutor(store, executorChan, logger, &wg)
 	if err != nil {
 		errorLog.Fatal("something wrong while creating executor: ", err)
 	}
@@ -89,7 +91,10 @@ func main() {
 	workerKillSwitch <- struct{}{}
 	<-workerKillSwitch
 
-	// stop executor. How?
+	// stop executor.
+	fmt.Println("Waiting for hooks to complete.")
+	wg.Wait()
+	fmt.Println("Hooks completed.")
 
 	// close db
 	_ = store.Close()

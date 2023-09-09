@@ -2,6 +2,7 @@ package hooks
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	db "github.com/PSKP-95/scheduler/db/sqlc"
@@ -13,14 +14,16 @@ type Executor struct {
 	hooks  map[string]Hook
 	exChan chan Message
 	Logger *mlog.Log
+	wg     *sync.WaitGroup
 }
 
-func NewExecutor(store db.Store, exChan chan Message, logger *mlog.Log) (*Executor, error) {
+func NewExecutor(store db.Store, exChan chan Message, logger *mlog.Log, wg *sync.WaitGroup) (*Executor, error) {
 	ex := &Executor{
 		store:  store,
 		hooks:  getHooks(),
 		exChan: exChan,
 		Logger: logger,
+		wg:     wg,
 	}
 
 	return ex, nil
@@ -40,6 +43,7 @@ func (ex *Executor) Execute() {
 		switch msg.Type {
 		case TRIGGER:
 			ex.createHistoryForOccurence(&msg)
+			ex.wg.Add(1)
 			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
 		case SCHEDULED:
 			schedule, err := ex.store.GetSchedule(context.Background(), msg.Occurence.Schedule)
@@ -60,6 +64,7 @@ func (ex *Executor) Execute() {
 				ex.Logger.ErrorLog.Println(schedule.ID, msg.Occurence.ID)
 			}
 
+			ex.wg.Add(1)
 			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
 		case SUCCESS:
 			params := db.UpdateHistoryAndDeleteOccurenceParams{
@@ -73,6 +78,7 @@ func (ex *Executor) Execute() {
 			if err != nil {
 				ex.Logger.ErrorLog.Println(err)
 			}
+			ex.wg.Done()
 		case FAILED:
 			params := db.UpdateHistoryAndDeleteOccurenceParams{
 				Schedule:  msg.Schedule,
@@ -85,6 +91,7 @@ func (ex *Executor) Execute() {
 			if err != nil {
 				ex.Logger.ErrorLog.Println(err)
 			}
+			ex.wg.Done()
 		}
 	}
 }
