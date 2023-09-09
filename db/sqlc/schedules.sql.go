@@ -118,7 +118,7 @@ type ListSchedulesRow struct {
 	Till         time.Time `json:"till"`
 	CreatedAt    time.Time `json:"created_at"`
 	LastModified time.Time `json:"last_modified"`
-	TotalRecords int64     `json:"-"`
+	TotalRecords int64     `json:"total_records"`
 }
 
 func (q *Queries) ListSchedules(ctx context.Context, arg ListSchedulesParams) ([]ListSchedulesRow, error) {
@@ -192,4 +192,42 @@ func (q *Queries) UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) 
 		&i.LastModified,
 	)
 	return i, err
+}
+
+const validSchedulesWithoutOccurence = `-- name: ValidSchedulesWithoutOccurence :many
+SELECT id, cron, hook, owner, data, active, till, created_at, last_modified FROM schedules s
+WHERE s.active = true AND s.till > now() AND s.id NOT IN (SELECT schedule FROM next_occurence)
+`
+
+func (q *Queries) ValidSchedulesWithoutOccurence(ctx context.Context) ([]Schedule, error) {
+	rows, err := q.db.QueryContext(ctx, validSchedulesWithoutOccurence)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Schedule{}
+	for rows.Next() {
+		var i Schedule
+		if err := rows.Scan(
+			&i.ID,
+			&i.Cron,
+			&i.Hook,
+			&i.Owner,
+			&i.Data,
+			&i.Active,
+			&i.Till,
+			&i.CreatedAt,
+			&i.LastModified,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

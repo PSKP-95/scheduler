@@ -32,3 +32,7 @@ WHERE id = $1;
 UPDATE schedules 
 SET cron = $2, hook = $3, active = $4, till = $5, data = $6, last_modified = now()
 WHERE id = $1 RETURNING *;
+
+-- name: ValidSchedulesWithoutOccurence :many
+SELECT * FROM schedules s
+WHERE s.active = true AND s.till > now() AND s.id NOT IN (SELECT schedule FROM next_occurence);

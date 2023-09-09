@@ -42,10 +42,12 @@ func (ex *Executor) Execute() {
 		msg := <-ex.exChan
 		switch msg.Type {
 		case TRIGGER:
+			ex.Logger.InfoLog.Println("TRIGGER: ", msg.Occurence)
 			ex.createHistoryForOccurence(&msg)
 			ex.wg.Add(1)
 			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan, ex.Logger)
 		case SCHEDULED:
+			ex.Logger.InfoLog.Println("SCHEDULED: ", msg.Occurence)
 			schedule, err := ex.store.GetSchedule(context.Background(), msg.Occurence.Schedule)
 			if err != nil {
 				ex.Logger.ErrorLog.Println(err)
@@ -67,6 +69,7 @@ func (ex *Executor) Execute() {
 			ex.wg.Add(1)
 			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan, ex.Logger)
 		case SUCCESS:
+			ex.Logger.InfoLog.Println("SUCCESS: ", msg.Occurence)
 			params := db.UpdateHistoryAndDeleteOccurenceParams{
 				Schedule:  msg.Schedule,
 				Occurence: msg.Occurence,
@@ -80,6 +83,7 @@ func (ex *Executor) Execute() {
 			}
 			ex.wg.Done()
 		case FAILED:
+			ex.Logger.InfoLog.Println("FAILED: ", msg.Occurence)
 			params := db.UpdateHistoryAndDeleteOccurenceParams{
 				Schedule:  msg.Schedule,
 				Occurence: msg.Occurence,

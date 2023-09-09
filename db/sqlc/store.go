@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/PSKP-95/scheduler/cron"
+	"github.com/lib/pq"
 )
 
 type Store interface {
@@ -83,7 +84,22 @@ func (store *SQLStore) UpdateHistoryAndOccurence(ctx context.Context, schedule S
 	err := store.execTx(ctx, func(q *Queries) error {
 		historyParams := getHistoryParam(schedule, occurence)
 		_, err := store.CreateHistory(context.Background(), historyParams)
-		if err != nil {
+		// if err != nil {
+		// 	if pqErr, ok := err.(*pq.Error); ok {
+		// 		if pqErr.Code.Name() != "unique_violation" {
+		// 			return err
+		// 		}
+		// 	} else {
+		// 		return err
+		// 	}
+		// }
+		switch err := err.(type) {
+		case nil:
+		case *pq.Error:
+			if err.Code.Name() != "unique_violation" {
+				return err
+			}
+		default:
 			return err
 		}
 

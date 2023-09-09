@@ -32,6 +32,7 @@ type Querier interface {
 	RemoveDeadWorkers(ctx context.Context) error
 	UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) (Schedule, error)
 	UpdateStatusAndDetails(ctx context.Context, arg UpdateStatusAndDetailsParams) (History, error)
+	ValidSchedulesWithoutOccurence(ctx context.Context) ([]Schedule, error)
 }
 
 var _ Querier = (*Queries)(nil)

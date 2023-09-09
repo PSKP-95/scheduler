@@ -2,9 +2,11 @@ package worker
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
+	"github.com/PSKP-95/scheduler/cron"
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
 	"github.com/google/uuid"
@@ -12,7 +14,9 @@ import (
 
 func (worker *Worker) Work() {
 	periodicTicker := time.NewTicker(time.Duration(worker.config.WorkPollTimeout) * time.Second)
+	longPeriodicTicker := time.NewTicker(time.Duration(worker.config.WorkPollTimeout) * 6 * time.Second)
 	defer periodicTicker.Stop()
+	defer longPeriodicTicker.Stop()
 
 	alarmTicker := time.NewTicker(15 * time.Second)
 
@@ -25,6 +29,9 @@ loop:
 			worker.punchCard()
 			worker.getNewWork()
 			worker.poll(alarmTicker)
+
+		case <-longPeriodicTicker.C:
+			worker.createOccurrenceForValidSchedules()
 
 		case <-alarmTicker.C:
 			alarmTicker.Stop()
@@ -41,6 +48,37 @@ loop:
 	}
 	fmt.Println("Graceful shutdown of worker.")
 	worker.killSwitch <- struct{}{}
+}
+
+func (w *Worker) createOccurrenceForValidSchedules() {
+	schedules, err := w.store.ValidSchedulesWithoutOccurence(context.Background())
+	if err != nil {
+		w.Logger.ErrorLog.Println(err)
+		return
+	}
+
+	for _, schedule := range schedules {
+		nextOccurence, err := cron.CalculateNextOccurence(schedule.Cron)
+		if err != nil {
+			w.Logger.ErrorLog.Println(err)
+			continue
+		}
+
+		occurenceParams := db.CreateOccurenceParams{
+			Schedule: schedule.ID,
+			Manual:   false,
+			Status:   db.StatusPending,
+			Occurence: sql.NullTime{
+				Time:  nextOccurence,
+				Valid: true,
+			},
+		}
+
+		_, err = w.store.CreateOccurence(context.Background(), occurenceParams)
+		if err != nil {
+			w.Logger.ErrorLog.Println(err)
+		}
+	}
 }
 
 func (worker *Worker) getNewWork() {
