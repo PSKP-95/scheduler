@@ -13,6 +13,7 @@ import (
 
 type Querier interface {
 	AssignUnassignedWork(ctx context.Context, arg AssignUnassignedWorkParams) error
+	ChangeOccurenceStatus(ctx context.Context, arg ChangeOccurenceStatusParams) error
 	CreateHistory(ctx context.Context, arg CreateHistoryParams) (History, error)
 	CreateOccurence(ctx context.Context, arg CreateOccurenceParams) (NextOccurence, error)
 	CreateSchedule(ctx context.Context, arg CreateScheduleParams) (Schedule, error)

@@ -82,8 +82,17 @@ func (store *SQLStore) CreateScheduleAddNextOccurence(ctx context.Context, sched
 
 func (store *SQLStore) UpdateHistoryAndOccurence(ctx context.Context, schedule Schedule, occurence NextOccurence) error {
 	err := store.execTx(ctx, func(q *Queries) error {
+		// put occurence in running state
+		err := store.ChangeOccurenceStatus(context.Background(), ChangeOccurenceStatusParams{
+			Status: StatusRunning,
+			ID:     occurence.ID,
+		})
+		if err != nil {
+			return err
+		}
+
 		historyParams := getHistoryParam(schedule, occurence)
-		_, err := store.CreateHistory(context.Background(), historyParams)
+		_, err = store.CreateHistory(context.Background(), historyParams)
 		// if err != nil {
 		// 	if pqErr, ok := err.(*pq.Error); ok {
 		// 		if pqErr.Code.Name() != "unique_violation" {
@@ -93,10 +102,10 @@ func (store *SQLStore) UpdateHistoryAndOccurence(ctx context.Context, schedule S
 		// 		return err
 		// 	}
 		// }
-		switch err := err.(type) {
+		switch pqErr := err.(type) {
 		case nil:
 		case *pq.Error:
-			if err.Code.Name() != "unique_violation" {
+			if pqErr.Code.Name() != "unique_violation" {
 				return err
 			}
 		default:
@@ -119,7 +128,13 @@ func (store *SQLStore) UpdateHistoryAndOccurence(ctx context.Context, schedule S
 		}
 
 		_, err = store.CreateOccurence(context.Background(), occurenceParams)
-		if err != nil {
+		switch pqErr := err.(type) {
+		case nil:
+		case *pq.Error:
+			if pqErr.Code.Name() != "unique_violation" {
+				return err
+			}
+		default:
 			return err
 		}
 

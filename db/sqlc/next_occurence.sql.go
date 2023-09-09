@@ -14,8 +14,8 @@ import (
 )
 
 const assignUnassignedWork = `-- name: AssignUnassignedWork :exec
-UPDATE next_occurence 
-SET worker = $1
+UPDATE next_occurence
+SET worker = $1, status = 'pending'
 WHERE occurence < (CURRENT_TIMESTAMP + $2 * INTERVAL '1 second') and worker IS NULL
 `
 
@@ -26,6 +26,22 @@ type AssignUnassignedWorkParams struct {
 
 func (q *Queries) AssignUnassignedWork(ctx context.Context, arg AssignUnassignedWorkParams) error {
 	_, err := q.db.ExecContext(ctx, assignUnassignedWork, arg.Worker, arg.Column2)
+	return err
+}
+
+const changeOccurenceStatus = `-- name: ChangeOccurenceStatus :exec
+UPDATE next_occurence
+SET status = $1
+WHERE id = $2
+`
+
+type ChangeOccurenceStatusParams struct {
+	Status Status `json:"status"`
+	ID     int32  `json:"id"`
+}
+
+func (q *Queries) ChangeOccurenceStatus(ctx context.Context, arg ChangeOccurenceStatusParams) error {
+	_, err := q.db.ExecContext(ctx, changeOccurenceStatus, arg.Status, arg.ID)
 	return err
 }
 
