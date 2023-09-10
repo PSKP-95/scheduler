@@ -3,13 +3,13 @@ package worker
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/PSKP-95/scheduler/cron"
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 func (worker *Worker) Work() {
@@ -41,26 +41,26 @@ loop:
 			// perform suicide
 			err := worker.store.DeleteWorker(context.Background(), worker.id)
 			if err != nil {
-				worker.Logger.ErrorLog.Println("Failed to perform suicide. exiting without suicide.")
+				log.Error().Err(err).Msg("Failed to perform suicide. exiting without suicide.")
 			}
 			break loop
 		}
 	}
-	fmt.Println("Graceful shutdown of worker.")
+	log.Info().Msg("Graceful shutdown of worker.")
 	worker.killSwitch <- struct{}{}
 }
 
 func (w *Worker) createOccurrenceForValidSchedules() {
 	schedules, err := w.store.ValidSchedulesWithoutOccurence(context.Background())
 	if err != nil {
-		w.Logger.ErrorLog.Println(err)
+		log.Error().Err(err).Msg("")
 		return
 	}
 
 	for _, schedule := range schedules {
 		nextOccurence, err := cron.CalculateNextOccurence(schedule.Cron)
 		if err != nil {
-			w.Logger.ErrorLog.Println(err)
+			log.Error().Err(err).Msg("")
 			continue
 		}
 
@@ -76,7 +76,7 @@ func (w *Worker) createOccurrenceForValidSchedules() {
 
 		_, err = w.store.CreateOccurence(context.Background(), occurenceParams)
 		if err != nil {
-			w.Logger.ErrorLog.Println(err)
+			log.Error().Err(err).Msg("")
 		}
 	}
 }
@@ -92,7 +92,7 @@ func (worker *Worker) getNewWork() {
 
 	err := worker.store.AssignUnassignedWork(context.Background(), params)
 	if err != nil {
-		worker.Logger.ErrorLog.Println(err)
+		log.Error().Err(err).Msg("")
 	}
 }
 
@@ -102,7 +102,7 @@ func (worker *Worker) poll(ticker *time.Ticker) {
 		Valid: true,
 	})
 	if err != nil {
-		worker.Logger.ErrorLog.Println(err)
+		log.Error().Err(err).Msg("")
 	}
 
 	worker.submitBulkWorkToExecutor(expiredOccurence)
@@ -112,7 +112,7 @@ func (worker *Worker) poll(ticker *time.Ticker) {
 		Valid: true,
 	})
 	if err != nil {
-		worker.Logger.ErrorLog.Println(err)
+		log.Error().Err(err).Msg("")
 	}
 
 	until := time.Until(nextTime)
@@ -127,7 +127,7 @@ func (worker *Worker) submitBulkWorkToExecutor(expiredOccurences []db.NextOccure
 			Occurence: v,
 			Type:      hooks.SCHEDULED,
 		}
-		worker.Logger.InfoLog.Println(msg)
+		log.Info().Msgf("%v", msg)
 		worker.executor.Submit(msg)
 	}
 }
@@ -135,13 +135,13 @@ func (worker *Worker) submitBulkWorkToExecutor(expiredOccurences []db.NextOccure
 func (worker *Worker) removeDeadBodies() {
 	err := worker.store.RemoveDeadWorkers(context.Background())
 	if err != nil {
-		worker.Logger.ErrorLog.Println(err)
+		log.Error().Err(err).Msg("Error while removing dead workers.")
 	}
 }
 
 func (worker *Worker) punchCard() {
 	err := worker.store.ProveLiveliness(context.Background(), worker.id)
 	if err != nil {
-		worker.Logger.ErrorLog.Println(err)
+		log.Error().Err(err).Msg("Error while punching card.")
 	}
 }

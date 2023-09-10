@@ -1,17 +1,15 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/PSKP-95/scheduler/config"
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
-	"github.com/PSKP-95/scheduler/mlog"
 	"github.com/PSKP-95/scheduler/worker"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/rs/zerolog/log"
 )
 
 type Server struct {
@@ -21,17 +19,15 @@ type Server struct {
 	validate *validator.Validate
 	executor *hooks.Executor
 	worker   *worker.Worker
-	Logger   *mlog.Log
 }
 
-func NewServer(config config.ServerConfig, store db.Store, executor *hooks.Executor, worker *worker.Worker, logger *mlog.Log) (*Server, error) {
+func NewServer(config config.ServerConfig, store db.Store, executor *hooks.Executor, worker *worker.Worker) (*Server, error) {
 	server := &Server{
 		config:   config,
 		store:    store,
 		validate: validator.New(),
 		executor: executor,
 		worker:   worker,
-		Logger:   logger,
 	}
 
 	server.setupRouter()
@@ -70,6 +66,6 @@ func (server *Server) Start(address string) error {
 }
 
 func (s *Server) Shutdown() error {
-	fmt.Println("Graceful shutdown of server.")
+	log.Info().Msg("Graceful shutdown of server.")
 	return s.app.Shutdown()
 }

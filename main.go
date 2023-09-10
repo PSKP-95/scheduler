@@ -2,8 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -13,28 +11,26 @@ import (
 	"github.com/PSKP-95/scheduler/config"
 	db "github.com/PSKP-95/scheduler/db/sqlc"
 	"github.com/PSKP-95/scheduler/hooks"
-	"github.com/PSKP-95/scheduler/mlog"
 	"github.com/PSKP-95/scheduler/worker"
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.Lshortfile)
-	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.TimestampFieldName = "timestamp"
+
+	log.Logger = zerolog.New(os.Stdout).With().Str("application", "scheduler").Timestamp().Caller().Logger()
 
 	dbConfig, serverConfig, workerConfig, err := config.LoadConfig(".")
 	if err != nil {
-		errorLog.Fatal("cannot load config: ", err)
+		log.Fatal().Err(err).Msg("cannot load config")
 	}
 
 	conn, err := sql.Open(dbConfig.Driver, dbConfig.URL)
 	if err != nil {
-		errorLog.Fatal("Cannot connect to db: ", err)
-	}
-
-	logger := &mlog.Log{
-		InfoLog:  infoLog,
-		ErrorLog: errorLog,
+		log.Fatal().Err(err).Msg("Cannot connect to db")
 	}
 
 	executorChan := make(chan hooks.Message)
@@ -43,25 +39,25 @@ func main() {
 
 	store := db.NewStore(conn)
 
-	executor, err := hooks.NewExecutor(store, executorChan, logger, &wg)
+	executor, err := hooks.NewExecutor(store, executorChan, &wg)
 	if err != nil {
-		errorLog.Fatal("something wrong while creating executor: ", err)
+		log.Fatal().Err(err).Msg("Cannot connect to db")
 	}
 
-	worker, err := worker.NewWorker(workerConfig, store, executor, logger, workerKillSwitch)
+	worker, err := worker.NewWorker(workerConfig, store, executor, workerKillSwitch)
 	if err != nil {
-		errorLog.Fatal("something wrong while creating worker: ", err)
+		log.Fatal().Err(err).Msg("something wrong while creating worker")
 	}
 
-	server, err := api.NewServer(serverConfig, store, executor, worker, logger)
+	server, err := api.NewServer(serverConfig, store, executor, worker)
 	if err != nil {
-		errorLog.Fatal("something wrong while creating new server: ", err)
+		log.Fatal().Err(err).Msg("Cannot connect to db")
 	}
 
 	// register worker
 	err = worker.Register()
 	if err != nil {
-		errorLog.Fatal("Error while registering worker: ", err)
+		log.Fatal().Err(err).Msg("Error while registering worker")
 	}
 
 	// start worker
@@ -73,7 +69,7 @@ func main() {
 	go func() {
 		err = server.Start(serverConfig.ServerAddress)
 		if err != nil {
-			errorLog.Fatal("Cannot start server: ", err)
+			log.Fatal().Err(err).Msg("Cannot start server")
 		}
 	}()
 
@@ -82,7 +78,7 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	<-c
-	fmt.Println("Running cleanup tasks.")
+	log.Info().Msg("Running cleanup tasks.")
 
 	// close server so no new requests allowed
 	_ = server.Shutdown()
@@ -92,12 +88,13 @@ func main() {
 	<-workerKillSwitch
 
 	// stop executor.
-	fmt.Println("Waiting for hooks to complete.")
+	log.Info().Msg("Waiting for hooks to complete.")
 	wg.Wait()
-	fmt.Println("Hooks completed.")
+	log.Info().Msg("Hooks completed.")
 
 	// close db
 	_ = store.Close()
 
-	fmt.Println("Graceful shutdown done.")
+	log.Info().Msg("Graceful shutdown done.")
+
 }

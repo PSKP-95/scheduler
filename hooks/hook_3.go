@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PSKP-95/scheduler/mlog"
+	"github.com/rs/zerolog/log"
 )
 
 type MyHook3 struct {
@@ -22,9 +22,9 @@ func (m *MyHook3) GetName() string {
 	return m.Name
 }
 
-func (m *MyHook3) Perform(msg Message, statusChan chan<- Message, mlogger *mlog.Log) {
-	mlogger.InfoLog.Println("Performing Hook 3")
-	mlogger.InfoLog.Println(msg)
+func (m *MyHook3) Perform(msg Message, statusChan chan<- Message) {
+	log.Info().Msg("Performing Hook 3")
+	log.Info().Msgf("%v", msg)
 	msg.Details = msg.Schedule.Data
 	msg.Type = SUCCESS
 	time.Sleep(30 * time.Second)

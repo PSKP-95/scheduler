@@ -6,23 +6,21 @@ import (
 	"time"
 
 	db "github.com/PSKP-95/scheduler/db/sqlc"
-	"github.com/PSKP-95/scheduler/mlog"
+	"github.com/rs/zerolog/log"
 )
 
 type Executor struct {
 	store  db.Store
 	hooks  map[string]Hook
 	exChan chan Message
-	Logger *mlog.Log
 	wg     *sync.WaitGroup
 }
 
-func NewExecutor(store db.Store, exChan chan Message, logger *mlog.Log, wg *sync.WaitGroup) (*Executor, error) {
+func NewExecutor(store db.Store, exChan chan Message, wg *sync.WaitGroup) (*Executor, error) {
 	ex := &Executor{
 		store:  store,
 		hooks:  getHooks(),
 		exChan: exChan,
-		Logger: logger,
 		wg:     wg,
 	}
 
@@ -42,19 +40,20 @@ func (ex *Executor) Execute() {
 		msg := <-ex.exChan
 		switch msg.Type {
 		case TRIGGER:
-			ex.Logger.InfoLog.Println("TRIGGER: ", msg.Occurence)
+			log.Info().Msgf("TRIGGER: Occurrence Id: %d, Occurence: %s, Schedule: %s", msg.Occurence.ID, msg.Occurence.Occurence.Time, msg.Occurence.Schedule)
 			ex.createHistoryForOccurence(&msg)
 			ex.wg.Add(1)
-			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan, ex.Logger)
+			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
 		case SCHEDULED:
-			ex.Logger.InfoLog.Println("SCHEDULED: ", msg.Occurence)
+			log.Info().Msgf("SCHEDULED: Occurrence Id: %d, Occurence: %s, Schedule: %s", msg.Occurence.ID, msg.Occurence.Occurence.Time, msg.Occurence.Schedule)
 			if msg.Occurence.Status == db.StatusRunning {
-				ex.Logger.ErrorLog.Println("Occurence already running.")
+				log.Info().Msg("Occurence already running.")
 				continue
 			}
+
 			schedule, err := ex.store.GetSchedule(context.Background(), msg.Occurence.Schedule)
 			if err != nil {
-				ex.Logger.ErrorLog.Println(err)
+				log.Error().Err(err)
 			}
 
 			if !schedule.Active || msg.Occurence.Occurence.Time.After(schedule.Till) {
@@ -66,14 +65,13 @@ func (ex *Executor) Execute() {
 
 			err = ex.store.UpdateHistoryAndOccurence(context.Background(), msg.Schedule, msg.Occurence)
 			if err != nil {
-				ex.Logger.ErrorLog.Println(err)
-				ex.Logger.ErrorLog.Println(schedule.ID, msg.Occurence.ID)
+				log.Info().Err(err).Msgf("Schedule: %v, Occurence: %v", schedule.ID, msg.Occurence.ID)
 			}
 
 			ex.wg.Add(1)
-			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan, ex.Logger)
+			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
 		case SUCCESS:
-			ex.Logger.InfoLog.Println("SUCCESS: ", msg.Occurence)
+			log.Info().Msgf("SUCCESS: Occurrence Id: %d, Occurence: %s, Schedule: %v", msg.Occurence.ID, msg.Occurence.Occurence.Time, msg.Occurence.Schedule)
 			params := db.UpdateHistoryAndDeleteOccurenceParams{
 				Schedule:  msg.Schedule,
 				Occurence: msg.Occurence,
@@ -83,11 +81,11 @@ func (ex *Executor) Execute() {
 
 			err := ex.store.UpdateHistoryAndDeleteOccurence(context.Background(), params)
 			if err != nil {
-				ex.Logger.ErrorLog.Println(err)
+				log.Error().Err(err).Msg("error while updating history & deleting occurence")
 			}
 			ex.wg.Done()
 		case FAILED:
-			ex.Logger.InfoLog.Println("FAILED: ", msg.Occurence)
+			log.Info().Msgf("FAILED: Occurrence Id: %d, Occurence: %s, Schedule: %v", msg.Occurence.ID, msg.Occurence.Occurence.Time, msg.Occurence.Schedule)
 			params := db.UpdateHistoryAndDeleteOccurenceParams{
 				Schedule:  msg.Schedule,
 				Occurence: msg.Occurence,
@@ -97,7 +95,7 @@ func (ex *Executor) Execute() {
 
 			err := ex.store.UpdateHistoryAndDeleteOccurence(context.Background(), params)
 			if err != nil {
-				ex.Logger.ErrorLog.Println(err)
+				log.Error().Err(err).Msg("error while updating history & deleting occurence")
 			}
 			ex.wg.Done()
 		}
@@ -107,7 +105,7 @@ func (ex *Executor) Execute() {
 func (ex *Executor) createHistoryForOccurence(msg *Message) {
 	schedule, err := ex.store.GetSchedule(context.Background(), msg.Occurence.Schedule)
 	if err != nil {
-		ex.Logger.ErrorLog.Fatalln(err)
+		log.Error().Err(err).Msg("Error while getting schedule")
 	}
 
 	msg.Schedule = schedule
@@ -115,7 +113,7 @@ func (ex *Executor) createHistoryForOccurence(msg *Message) {
 
 	_, err = ex.store.CreateHistory(context.Background(), historyParam)
 	if err != nil {
-		ex.Logger.ErrorLog.Println(err)
+		log.Error().Err(err).Msg("Error while creating history.")
 	}
 }
 

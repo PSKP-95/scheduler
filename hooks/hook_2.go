@@ -6,7 +6,7 @@ package hooks
 import (
 	"fmt"
 
-	"github.com/PSKP-95/scheduler/mlog"
+	"github.com/rs/zerolog/log"
 )
 
 type MyHook2 struct {
@@ -21,9 +21,9 @@ func (m *MyHook2) GetName() string {
 	return m.Name
 }
 
-func (m *MyHook2) Perform(msg Message, statusChan chan<- Message, mlogger *mlog.Log) {
-	mlogger.InfoLog.Println("Performing Hook 2")
-	mlogger.InfoLog.Println(msg)
+func (m *MyHook2) Perform(msg Message, statusChan chan<- Message) {
+	log.Info().Msg("Performing Hook 2")
+	log.Info().Msgf("%v", msg)
 	msg.Details = msg.Schedule.Data
 	msg.Type = SUCCESS
 	statusChan <- msg

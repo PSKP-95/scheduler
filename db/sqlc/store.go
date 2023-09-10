@@ -8,6 +8,7 @@ import (
 
 	"github.com/PSKP-95/scheduler/cron"
 	"github.com/lib/pq"
+	"github.com/rs/zerolog/log"
 )
 
 type Store interface {
@@ -32,7 +33,7 @@ func NewStore(db *sql.DB) Store {
 }
 
 func (store *SQLStore) Close() error {
-	fmt.Println("Graceful shutdown of db.")
+	log.Info().Msg("Graceful shutdown of db.")
 	return store.db.Close()
 }
 

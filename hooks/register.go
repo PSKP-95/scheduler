@@ -2,13 +2,11 @@ package hooks
 
 import (
 	"fmt"
-
-	"github.com/PSKP-95/scheduler/mlog"
 )
 
 type Hook interface {
 	Init()
-	Perform(msg Message, status chan<- Message, log *mlog.Log)
+	Perform(msg Message, status chan<- Message)
 	Destroy()
 	GetName() string
 }
