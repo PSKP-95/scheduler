@@ -43,6 +43,7 @@ loop:
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to perform suicide. exiting without suicide.")
 			}
+
 			break loop
 		}
 	}
@@ -54,6 +55,7 @@ func (w *Worker) createOccurrenceForValidSchedules() {
 	schedules, err := w.store.ValidSchedulesWithoutOccurence(context.Background())
 	if err != nil {
 		log.Error().Err(err).Msg("")
+
 		return
 	}
 
@@ -61,6 +63,7 @@ func (w *Worker) createOccurrenceForValidSchedules() {
 		nextOccurence, err := cron.CalculateNextOccurence(schedule.Cron)
 		if err != nil {
 			log.Error().Err(err).Msg("")
+
 			continue
 		}
 

@@ -53,11 +53,12 @@ func (ex *Executor) Execute() {
 
 			schedule, err := ex.store.GetSchedule(context.Background(), msg.Occurence.Schedule)
 			if err != nil {
-				log.Error().Err(err)
+				log.Error().Err(err).Msg("Error while getting schedule.")
 			}
 
 			if !schedule.Active || msg.Occurence.Occurence.Time.After(schedule.Till) {
 				_ = ex.store.DeleteOccurence(context.Background(), msg.Occurence.ID)
+
 				continue
 			}
 

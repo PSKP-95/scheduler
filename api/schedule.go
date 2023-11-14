@@ -79,7 +79,9 @@ func (server *Server) getSchedule(ctx *fiber.Ctx) error {
 
 	suuid, err := uuid.Parse(id)
 	if err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": fmt.Sprintf("invalid uuid %s. %s", id, err.Error())})
+		return ctx.
+			Status(http.StatusBadRequest).
+			JSON(&fiber.Map{"message": fmt.Sprintf("invalid uuid %s. %s", id, err.Error())})
 	}
 
 	schedule, err := server.store.GetSchedule(ctx.Context(), suuid)
