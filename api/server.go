@@ -36,7 +36,7 @@ func NewServer(config config.ServerConfig, store db.Store, executor *hooks.Execu
 	return server, nil
 }
 
-func (server *Server) setupRouter() {
+func (s *Server) setupRouter() {
 	app := fiber.New(fiber.Config{
 		ServerHeader: "Fiber",
 	})
@@ -51,22 +51,22 @@ func (server *Server) setupRouter() {
 	api := app.Group("/api")
 
 	// add routes to router
-	api.Post("/schedule", server.createSchedule)
-	api.Get("/schedules", server.listSchedules)
-	api.Get("/schedule/:id", server.getSchedule)
-	api.Get("/hooks", server.getHooks)
-	api.Delete("/schedule/:id", server.deleteSchedule)
-	api.Put("/schedule/:id", server.editSchedule)
-	api.Get("/schedule/:id/trigger", server.triggerSchedule)
-	api.Get("/schedule/:id/history", server.getScheduleHistory)
+	api.Post("/schedule", s.createSchedule)
+	api.Get("/schedules", s.listSchedules)
+	api.Get("/schedule/:id", s.getSchedule)
+	api.Get("/hooks", s.getHooks)
+	api.Delete("/schedule/:id", s.deleteSchedule)
+	api.Put("/schedule/:id", s.editSchedule)
+	api.Get("/schedule/:id/trigger", s.triggerSchedule)
+	api.Get("/schedule/:id/history", s.getScheduleHistory)
 
 	app.Static("/", "./ui")
 
-	server.app = app
+	s.app = app
 }
 
-func (server *Server) Start(address string) error {
-	return server.app.Listen(address)
+func (s *Server) Start(address string) error {
+	return s.app.Listen(address)
 }
 
 func (s *Server) Shutdown() error {

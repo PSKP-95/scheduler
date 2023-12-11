@@ -14,7 +14,7 @@ type ScheduleHistoryResponse struct {
 	History []db.ListHistoryRow `json:"history"`
 }
 
-func (server *Server) getScheduleHistory(ctx *fiber.Ctx) error {
+func (s *Server) getScheduleHistory(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	if id == "" {
 		ctx.Status(http.StatusBadRequest).JSON(
@@ -26,7 +26,7 @@ func (server *Server) getScheduleHistory(ctx *fiber.Ctx) error {
 	page := int32(ctx.QueryInt("page", 1))
 	size := int32(ctx.QueryInt("size", 10))
 
-	history, err := server.store.ListHistory(ctx.Context(), db.ListHistoryParams{
+	history, err := s.store.ListHistory(ctx.Context(), db.ListHistoryParams{
 		Schedule: uuid.MustParse(id),
 		Limit:    size,
 		Offset:   size * (page - 1),

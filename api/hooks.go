@@ -6,9 +6,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func (server *Server) getHooks(ctx *fiber.Ctx) error {
-	keys := make([]string, 0, len(server.executor.GetHooks()))
-	for k := range server.executor.GetHooks() {
+func (s *Server) getHooks(ctx *fiber.Ctx) error {
+	keys := make([]string, 0, len(s.executor.GetHooks()))
+	for k := range s.executor.GetHooks() {
 		keys = append(keys, k)
 	}
 
