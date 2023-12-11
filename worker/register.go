@@ -29,12 +29,12 @@ func NewWorker(config config.WorkerConfig, store db.Store, executor *hooks.Execu
 	return worker, nil
 }
 
-func (worker *Worker) GetWorkerId() uuid.UUID {
-	return worker.id
+func (w *Worker) GetWorkerId() uuid.UUID {
+	return w.id
 }
 
-func (worker *Worker) Register() error {
-	_, err := worker.store.CreateWorker(context.Background(), worker.id)
+func (w *Worker) Register() error {
+	_, err := w.store.CreateWorker(context.Background(), w.id)
 
 	if err != nil {
 		return err

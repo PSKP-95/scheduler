@@ -7,6 +7,7 @@ import (
 	"github.com/PSKP-95/scheduler/worker"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/rs/zerolog/log"
@@ -43,6 +44,9 @@ func (server *Server) setupRouter() {
 	// add middlewares
 	app.Use(logger.New())
 	app.Use(recover.New())
+	app.Use(compress.New(compress.Config{
+		Level: compress.LevelBestSpeed,
+	}))
 
 	api := app.Group("/api")
 

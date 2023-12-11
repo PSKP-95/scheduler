@@ -44,24 +44,24 @@ func main() {
 		log.Fatal().Err(err).Msg("Cannot connect to db")
 	}
 
-	worker, err := worker.NewWorker(workerConfig, store, executor, workerKillSwitch)
+	newWorker, err := worker.NewWorker(workerConfig, store, executor, workerKillSwitch)
 	if err != nil {
 		log.Fatal().Err(err).Msg("something wrong while creating worker")
 	}
 
-	server, err := api.NewServer(serverConfig, store, executor, worker)
+	server, err := api.NewServer(serverConfig, store, executor, newWorker)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot connect to db")
 	}
 
 	// register worker
-	err = worker.Register()
+	err = newWorker.Register()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error while registering worker")
 	}
 
 	// start worker
-	go worker.Work()
+	go newWorker.Work()
 
 	// start executor
 	go executor.Execute()
@@ -96,5 +96,4 @@ func main() {
 	_ = store.Close()
 
 	log.Info().Msg("Graceful shutdown done.")
-
 }

@@ -12,9 +12,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (worker *Worker) Work() {
-	periodicTicker := time.NewTicker(time.Duration(worker.config.WorkPollTimeout) * time.Second)
-	longPeriodicTicker := time.NewTicker(time.Duration(worker.config.WorkPollTimeout) * 6 * time.Second)
+func (w *Worker) Work() {
+	periodicTicker := time.NewTicker(time.Duration(w.config.WorkPollTimeout) * time.Second)
+	longPeriodicTicker := time.NewTicker(time.Duration(w.config.WorkPollTimeout) * 6 * time.Second)
 	defer periodicTicker.Stop()
 	defer longPeriodicTicker.Stop()
 
@@ -25,21 +25,21 @@ loop:
 		select {
 		case <-periodicTicker.C:
 			alarmTicker.Stop()
-			worker.removeDeadBodies()
-			worker.punchCard()
-			worker.getNewWork()
-			worker.poll(alarmTicker)
+			w.removeDeadBodies()
+			w.punchCard()
+			w.getNewWork()
+			w.poll(alarmTicker)
 
 		case <-longPeriodicTicker.C:
-			worker.createOccurrenceForValidSchedules()
+			w.createOccurrenceForValidSchedules()
 
 		case <-alarmTicker.C:
 			alarmTicker.Stop()
-			worker.poll(alarmTicker)
+			w.poll(alarmTicker)
 
-		case <-worker.killSwitch:
+		case <-w.killSwitch:
 			// perform suicide
-			err := worker.store.DeleteWorker(context.Background(), worker.id)
+			err := w.store.DeleteWorker(context.Background(), w.id)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to perform suicide. exiting without suicide.")
 			}
@@ -47,8 +47,8 @@ loop:
 			break loop
 		}
 	}
-	log.Info().Msg("Graceful shutdown of worker.")
-	worker.killSwitch <- struct{}{}
+	log.Info().Msg("Graceful shutdown of w.")
+	w.killSwitch <- struct{}{}
 }
 
 func (w *Worker) createOccurrenceForValidSchedules() {
@@ -84,34 +84,34 @@ func (w *Worker) createOccurrenceForValidSchedules() {
 	}
 }
 
-func (worker *Worker) getNewWork() {
+func (w *Worker) getNewWork() {
 	params := db.AssignUnassignedWorkParams{
 		Worker: uuid.NullUUID{
-			UUID:  worker.id,
+			UUID:  w.id,
 			Valid: true,
 		},
-		Column2: worker.config.WorkLookAheadSec,
+		Column2: w.config.WorkLookAheadSec,
 	}
 
-	err := worker.store.AssignUnassignedWork(context.Background(), params)
+	err := w.store.AssignUnassignedWork(context.Background(), params)
 	if err != nil {
 		log.Error().Err(err).Msg("")
 	}
 }
 
-func (worker *Worker) poll(ticker *time.Ticker) {
-	expiredOccurence, err := worker.store.MyExpiredWork(context.Background(), uuid.NullUUID{
-		UUID:  worker.id,
+func (w *Worker) poll(ticker *time.Ticker) {
+	expiredOccurence, err := w.store.MyExpiredWork(context.Background(), uuid.NullUUID{
+		UUID:  w.id,
 		Valid: true,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("")
 	}
 
-	worker.submitBulkWorkToExecutor(expiredOccurence)
+	w.submitBulkWorkToExecutor(expiredOccurence)
 
-	nextTime, err := worker.store.GetNextImmediateWork(context.Background(), uuid.NullUUID{
-		UUID:  worker.id,
+	nextTime, err := w.store.GetNextImmediateWork(context.Background(), uuid.NullUUID{
+		UUID:  w.id,
 		Valid: true,
 	})
 	if err != nil {
@@ -124,26 +124,26 @@ func (worker *Worker) poll(ticker *time.Ticker) {
 	}
 }
 
-func (worker *Worker) submitBulkWorkToExecutor(expiredOccurences []db.NextOccurence) {
+func (w *Worker) submitBulkWorkToExecutor(expiredOccurences []db.NextOccurence) {
 	for _, v := range expiredOccurences {
 		msg := hooks.Message{
 			Occurence: v,
 			Type:      hooks.SCHEDULED,
 		}
 		log.Info().Msgf("%v", msg)
-		worker.executor.Submit(msg)
+		w.executor.Submit(msg)
 	}
 }
 
-func (worker *Worker) removeDeadBodies() {
-	err := worker.store.RemoveDeadWorkers(context.Background())
+func (w *Worker) removeDeadBodies() {
+	err := w.store.RemoveDeadWorkers(context.Background())
 	if err != nil {
 		log.Error().Err(err).Msg("Error while removing dead workers.")
 	}
 }
 
-func (worker *Worker) punchCard() {
-	err := worker.store.ProveLiveliness(context.Background(), worker.id)
+func (w *Worker) punchCard() {
+	err := w.store.ProveLiveliness(context.Background(), w.id)
 	if err != nil {
 		log.Error().Err(err).Msg("Error while punching card.")
 	}
