@@ -17,10 +17,8 @@ type ScheduleHistoryResponse struct {
 func (s *Server) getScheduleHistory(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	if id == "" {
-		ctx.Status(http.StatusBadRequest).JSON(
+		return ctx.Status(http.StatusBadRequest).JSON(
 			&fiber.Map{"message": "provide parameter id"})
-
-		return nil
 	}
 
 	page := int32(ctx.QueryInt("page", 1))

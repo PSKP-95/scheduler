@@ -116,6 +116,7 @@ func (w *Worker) poll(ticker *time.Ticker) {
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("")
+		return
 	}
 
 	until := time.Until(nextTime)

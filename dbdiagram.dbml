@@ -62,6 +62,6 @@ Table punch_card {
 }
 
 Ref:"schedules"."id" < "next_occurence"."schedule"
-Ref:"schedules"."id" < "history"."schedule"
+Ref:"schedules"."id" < "history"."schedule" [delete: cascade]
 //Ref:"next_occurence"."id" < "history"."occurence_id" [delete: set default]
 Ref:"punch_card"."id" < "next_occurence"."worker" [delete: set null]

@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -108,6 +109,14 @@ func (s *Server) deleteSchedule(ctx *fiber.Ctx) error {
 		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": fmt.Sprintf("invalid uuid %s. %s", id, err.Error())})
 	}
 
+	schedule, err := s.store.GetSchedule(ctx.Context(), suuid)
+	if err != nil {
+		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": fmt.Sprintf("error while getting schedule %s. %s", id, err.Error())})
+	}
+	if schedule.Active {
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{"message": fmt.Sprintf("schedule %s is active. can't be deleted", id)})
+	}
+
 	err = s.store.DeleteSchedule(ctx.Context(), suuid)
 	if err != nil {
 		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{"message": err.Error()})
@@ -161,7 +170,7 @@ func (s *Server) editSchedule(ctx *fiber.Ctx) error {
 
 	schedule, err := s.store.UpdateSchedule(ctx.Context(), scheduleParams)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return ctx.Status(http.StatusNotFound).JSON(&fiber.Map{"message": fmt.Sprintf("schedule with id %s not found. %s", id, err.Error())})
 		}
 

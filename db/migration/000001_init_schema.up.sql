@@ -60,6 +60,6 @@ COMMENT ON COLUMN "schedules"."till" IS 'till what timestamp this schedule will 
 
 ALTER TABLE "next_occurence" ADD FOREIGN KEY ("schedule") REFERENCES "schedules" ("id");
 
-ALTER TABLE "history" ADD FOREIGN KEY ("schedule") REFERENCES "schedules" ("id");
+ALTER TABLE "history" ADD FOREIGN KEY ("schedule") REFERENCES "schedules" ("id") ON DELETE CASCADE;
 
 ALTER TABLE "next_occurence" ADD FOREIGN KEY ("worker") REFERENCES "punch_card" ("id") ON DELETE SET NULL;
