@@ -2,6 +2,7 @@ package hooks
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -35,6 +36,17 @@ func (ex *Executor) Submit(msg Message) {
 	ex.exChan <- msg
 }
 
+func (ex *Executor) executeHook(name string, msg Message) {
+	hook, ok := ex.hooks[name]
+	if !ok {
+		msg.Type = FAILED
+		msg.Details = fmt.Sprintf("hook with name %s does not exists", name)
+		ex.exChan <- msg
+	} else {
+		hook.Perform(msg, ex.exChan)
+	}
+}
+
 func (ex *Executor) Execute() {
 	for {
 		msg := <-ex.exChan
@@ -43,7 +55,8 @@ func (ex *Executor) Execute() {
 			log.Info().Msgf("TRIGGER: Occurrence Id: %d, Occurence: %s, Schedule: %s", msg.Occurence.ID, msg.Occurence.Occurence.Time, msg.Occurence.Schedule)
 			ex.createHistoryForOccurence(&msg)
 			ex.wg.Add(1)
-			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
+			//go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
+			go ex.executeHook(msg.Schedule.Hook, msg)
 		case SCHEDULED:
 			log.Info().Msgf("SCHEDULED: Occurrence Id: %d, Occurence: %s, Schedule: %s", msg.Occurence.ID, msg.Occurence.Occurence.Time, msg.Occurence.Schedule)
 			if msg.Occurence.Status == db.StatusRunning {
@@ -70,7 +83,7 @@ func (ex *Executor) Execute() {
 			}
 
 			ex.wg.Add(1)
-			go ex.hooks[msg.Schedule.Hook].Perform(msg, ex.exChan)
+			go ex.executeHook(msg.Schedule.Hook, msg)
 		case SUCCESS:
 			log.Info().Msgf("SUCCESS: Occurrence Id: %d, Occurence: %s, Schedule: %v", msg.Occurence.ID, msg.Occurence.Occurence.Time, msg.Occurence.Schedule)
 			params := db.UpdateHistoryAndDeleteOccurenceParams{
